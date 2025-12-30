@@ -23,6 +23,10 @@ dependencies {
 
     // This dependency is used by the application.
     implementation(libs.guava)
+
+    // Se quiserermos usar uma lib tipo Jackson para JSON
+    //implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
+
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -34,10 +38,15 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = "dss.ui.Main"
+    mainClass = "App"
 }
 
 tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}
+
