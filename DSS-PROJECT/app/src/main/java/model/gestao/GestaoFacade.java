@@ -23,7 +23,7 @@ public class GestaoFacade implements InterGestaoL {
     public Alimento getAlimento(String idAlimento) {
         Alimento a = this.alimentos.get(idAlimento);
         if (a != null) {
-            return a.clone();
+            return a;
         }
         return null;
     }

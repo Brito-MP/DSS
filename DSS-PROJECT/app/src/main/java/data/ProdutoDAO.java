@@ -212,13 +212,14 @@ public class ProdutoDAO implements Map<String, Produto> {
     }
 
     private void saveItem(Item item, Connection conn) throws SQLException {
-        // Só salvar alimentos se o item já existir (evitar DELETE desnecessário)
-        if (produtoExiste(item.getId(), conn)) {
-            // Alimentos já foram inicializados na BD, não fazer DELETE
-            return;
+        // Sincronizar alimentos com a database
+        // Primeiro, remover alimentos existentes
+        try (PreparedStatement pstm = conn.prepareStatement("DELETE FROM item_alimentos WHERE ItemId = ?")) {
+            pstm.setString(1, item.getId());
+            pstm.executeUpdate();
         }
 
-        // Se for novo item, salvar alimentos
+        // Depois, inserir alimentos atualizados
         try (PreparedStatement pstm = conn.prepareStatement(
                 "INSERT INTO item_alimentos (ItemId, AlimentoId) VALUES (?, ?)")) {
             for (String alimentoId : item.getAlimentos().keySet()) {
@@ -228,16 +229,18 @@ public class ProdutoDAO implements Map<String, Produto> {
             }
         }
 
-        // Salvar trocas
-        try (PreparedStatement pstm = conn.prepareStatement(
-                "INSERT INTO item_trocas (ItemId, AlimentoOriginalId, AlimentoTrocaId) VALUES (?, ?, ?)")) {
-            for (Map.Entry<String, List<String>> entrada : item.getTrocas().entrySet()) {
-                String alimentoOriginal = entrada.getKey();
-                for (String alimentoTroca : entrada.getValue()) {
-                    pstm.setString(1, item.getId());
-                    pstm.setString(2, alimentoOriginal);
-                    pstm.setString(3, alimentoTroca);
-                    pstm.executeUpdate();
+        // Salvar trocas (só se ainda não existirem)
+        if (!produtoExiste(item.getId(), conn)) {
+            try (PreparedStatement pstm = conn.prepareStatement(
+                    "INSERT INTO item_trocas (ItemId, AlimentoOriginalId, AlimentoTrocaId) VALUES (?, ?, ?)")) {
+                for (Map.Entry<String, List<String>> entrada : item.getTrocas().entrySet()) {
+                    String alimentoOriginal = entrada.getKey();
+                    for (String alimentoTroca : entrada.getValue()) {
+                        pstm.setString(1, item.getId());
+                        pstm.setString(2, alimentoOriginal);
+                        pstm.setString(3, alimentoTroca);
+                        pstm.executeUpdate();
+                    }
                 }
             }
         }

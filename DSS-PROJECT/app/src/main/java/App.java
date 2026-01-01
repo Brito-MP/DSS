@@ -4,7 +4,6 @@ import java.util.Scanner;
 
 import model.InterRestauranteL;
 import model.RestauranteFacade;
-import model.temporario.Restaurant;
 
 public class App {
 
@@ -53,9 +52,10 @@ public class App {
             // Testar trocas
             System.out.println(" Testando trocas de alimentos...");
             try {
-                boolean trocaRealizada = this.model.registaTroca("BigMac", "carne_vaca", "carne_frango");
+                boolean trocaRealizada = this.model.registaTroca("BigMac", "carne_frango", "carne_vaca");
                 if (trocaRealizada) {
                     System.out.println("   Troca realizada com sucesso!\n");
+
                 } else {
                     System.out.println("   Troca não foi possível realizar.\n");
                 }

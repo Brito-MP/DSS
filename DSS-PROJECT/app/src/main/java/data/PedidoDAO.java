@@ -98,260 +98,260 @@ public class PedidoDAO implements Map<Long, Pedido> {
 
     private void inicializarProdutos() {
         try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD)) {
-            // Verificar UMA VEZ se a tabela está vazia
-            if (tabelaProdutosVazia(conn)) {
-                System.out.println("→ Inicializando BD com dados padrão...\n");
-                // PRIMEIRO: Inicializar alimentos na tabela alimentos
-                inicializarAlimentos(conn);
-                // DEPOIS: Inicializar items, menus e suas relações
-                inicializarItems(conn);
-                inicializarMenus(conn);
-                inicializarTrocas(conn);
-                System.out.println("→ Todas as inicializações completadas!\n");
-            }
+            // Cada inicialização verifica independentemente se precisa executar
+            inicializarAlimentos(conn);
+            inicializarItems(conn);
+            inicializarMenus(conn);
+            inicializarTrocas(conn);
         } catch (SQLException e) {
             e.printStackTrace();
             throw new NullPointerException(e.getMessage());
         }
     }
 
-    private boolean tabelaProdutosVazia(Connection conn) throws SQLException {
-        try (Statement stm = conn.createStatement();
-                ResultSet rs = stm.executeQuery("SELECT count(*) FROM produtos")) {
-            return rs.next() && rs.getInt(1) == 0;
-        }
-    }
-
     private void inicializarAlimentos(Connection conn) throws SQLException {
-        // Inserir os 10 alimentos padrão na tabela alimentos
-        PreparedStatement pstm = conn.prepareStatement(
-                "INSERT INTO alimentos (Id, Nome, Quantidade) VALUES (?, ?, ?)");
+        // Verifica se alimentos específicos já existem
+        try (Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery(
+                        "SELECT COUNT(*) FROM alimentos WHERE Id IN ('carne_vaca', 'carne_frango', 'bacon')")) {
 
-        String[][] alimentos = {
-                { "carne_vaca", "Carne de Vaca", "100" },
-                { "carne_frango", "Carne de Frango", "100" },
-                { "bacon", "Bacon", "50" },
-                { "alface", "Alface", "50" },
-                { "tomate", "Tomate", "50" },
-                { "pao_normal", "Pão Normal", "100" },
-                { "pao_brioche", "Pão Brioche", "50" },
-                { "cebola", "Cebola", "50" },
-                { "batata", "Batata", "100" },
-                { "nugget", "Nugget", "100" }
-        };
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("→ Inicializando alimentos...");
 
-        for (String[] alimento : alimentos) {
-            pstm.setString(1, alimento[0]);
-            pstm.setString(2, alimento[1]);
-            pstm.setInt(3, Integer.parseInt(alimento[2]));
-            pstm.executeUpdate();
+                PreparedStatement pstm = conn.prepareStatement(
+                        "INSERT INTO alimentos (Id, Nome, Quantidade) VALUES (?, ?, ?)");
+
+                String[][] alimentos = {
+                        { "carne_vaca", "Carne de Vaca", "100" },
+                        { "carne_frango", "Carne de Frango", "100" },
+                        { "bacon", "Bacon", "50" },
+                        { "alface", "Alface", "50" },
+                        { "tomate", "Tomate", "50" },
+                        { "pao_normal", "Pão Normal", "100" },
+                        { "pao_brioche", "Pão Brioche", "50" },
+                        { "cebola", "Cebola", "50" },
+                        { "batata", "Batata", "100" },
+                        { "nugget", "Nugget", "100" }
+                };
+
+                for (String[] alimento : alimentos) {
+                    pstm.setString(1, alimento[0]);
+                    pstm.setString(2, alimento[1]);
+                    pstm.setInt(3, Integer.parseInt(alimento[2]));
+                    pstm.executeUpdate();
+                }
+
+                pstm.close();
+                System.out.println("✓ Alimentos inicializados com sucesso!\n");
+            }
         }
-
-        System.out.println("→ Todos os 10 alimentos inseridos com sucesso!");
-
-        pstm.close();
     }
 
     private void inicializarItems(Connection conn) throws SQLException {
-        System.out.println("→ Iniciando inicializarItems()...");
-        // Inserir produtos
-        PreparedStatement pstm = conn.prepareStatement(
-                "INSERT INTO produtos (Id, Nome, Preco, TempoConfecaoEsperado, TipoProduto) VALUES (?, ?, ?, ?, ?)");
+        // Verifica se items específicos já existem
+        try (Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery(
+                        "SELECT COUNT(*) FROM produtos WHERE TipoProduto='ITEM' AND Id IN ('BigMac', 'batataFrita', 'coca_cola')")) {
 
-        // batataFrita
-        pstm.setString(1, "batataFrita");
-        pstm.setString(2, "Batatas Fritas");
-        pstm.setDouble(3, 4.0);
-        pstm.setDouble(4, 100.0);
-        pstm.setString(5, "ITEM");
-        pstm.executeUpdate();
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("→ Inicializando items...");
 
-        // BigMac
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "BigMac");
-        pstm.setDouble(3, 20.0);
-        pstm.setDouble(4, 300.0);
-        pstm.setString(5, "ITEM");
-        pstm.executeUpdate();
-        // McChicken
-        pstm.setString(1, "mcchicken");
-        pstm.setString(2, "McChicken");
-        pstm.setDouble(3, 20.0);
-        pstm.setDouble(4, 300.0);
-        pstm.setString(5, "ITEM");
-        pstm.executeUpdate();
+                PreparedStatement pstm = conn.prepareStatement(
+                        "INSERT INTO produtos (Id, Nome, Preco, TempoConfecaoEsperado, TipoProduto) VALUES (?, ?, ?, ?, ?)");
 
-        // Coca-Cola
-        pstm.setString(1, "coca_cola");
-        pstm.setString(2, "Coca-Cola");
-        pstm.setDouble(3, 1.5);
-        pstm.setDouble(4, 10.0);
-        pstm.setString(5, "ITEM");
-        pstm.executeUpdate();
-        // Sumol
-        pstm.setString(1, "sumol");
-        pstm.setString(2, "Sumol");
-        pstm.setDouble(3, 1.5);
-        pstm.setDouble(4, 10.0);
-        pstm.setString(5, "ITEM");
-        pstm.executeUpdate();
+                // batataFrita
+                pstm.setString(1, "batataFrita");
+                pstm.setString(2, "Batatas Fritas");
+                pstm.setDouble(3, 4.0);
+                pstm.setDouble(4, 100.0);
+                pstm.setString(5, "ITEM");
+                pstm.executeUpdate();
 
-        pstm.close();
+                // BigMac
+                pstm.setString(1, "BigMac");
+                pstm.setString(2, "BigMac");
+                pstm.setDouble(3, 20.0);
+                pstm.setDouble(4, 300.0);
+                pstm.setString(5, "ITEM");
+                pstm.executeUpdate();
 
-        // Inserir alimentos para items
-        System.out.println("→ Inserindo relações item_alimentos...");
-        pstm = conn.prepareStatement("INSERT INTO item_alimentos (ItemId, AlimentoId) VALUES (?, ?)");
+                // McChicken
+                pstm.setString(1, "mcchicken");
+                pstm.setString(2, "McChicken");
+                pstm.setDouble(3, 20.0);
+                pstm.setDouble(4, 300.0);
+                pstm.setString(5, "ITEM");
+                pstm.executeUpdate();
 
-        // batataFrita tem alimento batata
-        pstm.setString(1, "batataFrita");
-        pstm.setString(2, "batata");
-        pstm.executeUpdate();
+                // Coca-Cola
+                pstm.setString(1, "coca_cola");
+                pstm.setString(2, "Coca-Cola");
+                pstm.setDouble(3, 1.5);
+                pstm.setDouble(4, 10.0);
+                pstm.setString(5, "ITEM");
+                pstm.executeUpdate();
 
-        // BigMac tem alimentos: alface, carne_vaca, cebola, pao_normal, tomate
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "alface");
-        pstm.executeUpdate();
+                // Sumol
+                pstm.setString(1, "sumol");
+                pstm.setString(2, "Sumol");
+                pstm.setDouble(3, 1.5);
+                pstm.setDouble(4, 10.0);
+                pstm.setString(5, "ITEM");
+                pstm.executeUpdate();
 
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "carne_vaca");
-        pstm.executeUpdate();
+                pstm.close();
 
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "cebola");
-        pstm.executeUpdate();
+                // Inserir relações item_alimentos
+                inicializarAlimentosItems(conn);
 
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "pao_normal");
-        pstm.executeUpdate();
+                System.out.println("✓ Items inicializados com sucesso!\n");
+            }
+        }
+    }
 
-        pstm.setString(1, "BigMac");
-        pstm.setString(2, "tomate");
-        pstm.executeUpdate();
+    private void inicializarAlimentosItems(Connection conn) throws SQLException {
+        // Verifica se relações item-alimentos já existem
+        try (Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery(
+                        "SELECT COUNT(*) FROM item_alimentos WHERE ItemId IN ('BigMac', 'batataFrita')")) {
 
-        // Coca-Cola não tem alimentos associados
+            if (rs.next() && rs.getInt(1) == 0) {
+                PreparedStatement pstm = conn.prepareStatement(
+                        "INSERT INTO item_alimentos (ItemId, AlimentoId) VALUES (?, ?)");
 
-        System.out.println("→ Item_alimentos inseridos com sucesso!");
-        pstm.close();
+                // batataFrita -> batata
+                pstm.setString(1, "batataFrita");
+                pstm.setString(2, "batata");
+                pstm.executeUpdate();
+
+                // BigMac -> alface, carne_vaca, cebola, pao_normal, tomate
+                String[][] bigMacAlimentos = {
+                        { "BigMac", "alface" },
+                        { "BigMac", "carne_vaca" },
+                        { "BigMac", "cebola" },
+                        { "BigMac", "pao_normal" },
+                        { "BigMac", "tomate" }
+                };
+
+                for (String[] rel : bigMacAlimentos) {
+                    pstm.setString(1, rel[0]);
+                    pstm.setString(2, rel[1]);
+                    pstm.executeUpdate();
+                }
+
+                pstm.close();
+            }
+        }
     }
 
     private void inicializarMenus(Connection conn) throws SQLException {
-        System.out.println("→ Iniciando inicializarMenus()...");
-        // Inserir produtos do tipo MENU
-        PreparedStatement pstm = conn.prepareStatement(
-                "INSERT INTO produtos (Id, Nome, Preco, TempoConfecaoEsperado, TipoProduto) VALUES (?, ?, ?, ?, ?)");
+        // Verifica se menus específicos já existem
+        try (Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery(
+                        "SELECT COUNT(*) FROM produtos WHERE TipoProduto='MENU' AND Id IN ('menubigmac', 'menumcchicken')")) {
 
-        // Menu 1: Combo Clássico (BigMac + Batatas + Coca)
-        pstm.setString(1, "comboClassico");
-        pstm.setString(2, "Combo Clássico");
-        pstm.setDouble(3, 24.0); // 20 + 4 + 1.5 - desconto
-        pstm.setDouble(4, 300.0); // máximo dos 3 produtos
-        pstm.setString(5, "MENU");
-        int r1 = pstm.executeUpdate();
-        System.out.println("  → Menu 1 inserted: " + r1 + " rows");
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("→ Inicializando menus...");
 
-        // Menu 2: Combo Duplo (2x BigMac + Batatas + Coca)
-        pstm.setString(1, "comboDuplo");
-        pstm.setString(2, "Combo Duplo");
-        pstm.setDouble(3, 40.0); // 20 + 20 + 4 + 1.5 - desconto
-        pstm.setDouble(4, 300.0);
-        pstm.setString(5, "MENU");
-        int r2 = pstm.executeUpdate();
-        System.out.println("  → Menu 2 inserted: " + r2 + " rows");
+                PreparedStatement pstm = conn.prepareStatement(
+                        "INSERT INTO produtos (Id, Nome, Preco, TempoConfecaoEsperado, TipoProduto) VALUES (?, ?, ?, ?, ?)");
 
-        pstm.close();
+                // Menu BigMac
+                pstm.setString(1, "menubigmac");
+                pstm.setString(2, "Menu BigMac");
+                pstm.setDouble(3, 24.0);
+                pstm.setDouble(4, 300.0);
+                pstm.setString(5, "MENU");
+                pstm.executeUpdate();
 
-        // DEBUG: Verificar registos inseridos de MENU
-        System.out.println("→ Todos os produtos de tipo MENU inseridos com sucesso!");
-        System.out.flush(); // Force flush immediately
+                // Menu McChicken
+                pstm.setString(1, "menumcchicken");
+                pstm.setString(2, "Menu McChicken");
+                pstm.setDouble(3, 40.0);
+                pstm.setDouble(4, 300.0);
+                pstm.setString(5, "MENU");
+                pstm.executeUpdate();
 
-        PreparedStatement checkStmt = conn.prepareStatement("SELECT * FROM produtos WHERE TipoProduto = 'MENU'");
-        ResultSet rsCheck = checkStmt.executeQuery();
+                pstm.close();
 
-        System.out.println("\n=== Registos de MENU em produtos ===");
-        while (rsCheck.next()) {
-            String produtoId = rsCheck.getString("Id");
-            String nome = rsCheck.getString("Nome");
-            double preco = rsCheck.getDouble("Preco");
-            double tempo = rsCheck.getDouble("TempoConfecaoEsperado");
-            String tipo = rsCheck.getString("TipoProduto");
-            System.out.println("  ID: " + produtoId + " | Nome: " + nome + " | Preço: " + preco + "€ | Tempo: " + tempo
-                    + "s | Tipo: " + tipo);
+                System.out.println("✓ Menus inseridos com sucesso!\n");
+            }
         }
-        rsCheck.close();
-        checkStmt.close();
 
-        // Inserir relações menu-itens
-        System.out.println("→ Inserindo relações menu-itens...");
-        pstm = conn.prepareStatement("INSERT INTO menu_itens (MenuId, ItemId) VALUES (?, ?)");
+        // Sempre verificar e inicializar as relações menu-itens (independentemente se
+        // os menus existem)
+        inicializarMenuItens(conn);
+    }
 
-        // comboClassico contém BigMac, batataFrita e coca_cola
-        pstm.setString(1, "comboClassico");
-        pstm.setString(2, "BigMac");
-        pstm.executeUpdate();
+    private void inicializarMenuItens(Connection conn) throws SQLException {
+        // Recria sempre as relações dos menus suportados
+        try (PreparedStatement delete = conn.prepareStatement(
+                "DELETE FROM menu_itens WHERE MenuId IN ('menubigmac', 'menumcchicken')");
+                PreparedStatement insert = conn.prepareStatement(
+                        "INSERT INTO menu_itens (MenuId, ItemId) VALUES (?, ?)")) {
 
-        pstm.setString(1, "comboClassico");
-        pstm.setString(2, "batataFrita");
-        pstm.executeUpdate();
+            delete.executeUpdate();
 
-        pstm.setString(1, "comboClassico");
-        pstm.setString(2, "coca_cola");
-        pstm.executeUpdate();
+            String[][] menuBigMac = {
+                    { "menubigmac", "BigMac" },
+                    { "menubigmac", "batataFrita" },
+                    { "menubigmac", "coca_cola" }
+            };
 
-        // comboDuplo contém BigMac, batataFrita e coca_cola (BigMac aparece uma única
-        // vez na tabela)
-        pstm.setString(1, "comboDuplo");
-        pstm.setString(2, "BigMac");
-        pstm.executeUpdate();
+            for (String[] rel : menuBigMac) {
+                insert.setString(1, rel[0]);
+                insert.setString(2, rel[1]);
+                insert.executeUpdate();
+            }
 
-        pstm.setString(1, "comboDuplo");
-        pstm.setString(2, "batataFrita");
-        pstm.executeUpdate();
+            String[][] menuMcChicken = {
+                    { "menumcchicken", "mcchicken" },
+                    { "menumcchicken", "batataFrita" },
+                    { "menumcchicken", "sumol" }
+            };
 
-        pstm.setString(1, "comboDuplo");
-        pstm.setString(2, "coca_cola");
-        pstm.executeUpdate();
-
-        System.out.println("→ Todas as relações menu-itens inseridas com sucesso!\n");
-
-        pstm.close();
+            for (String[] rel : menuMcChicken) {
+                insert.setString(1, rel[0]);
+                insert.setString(2, rel[1]);
+                insert.executeUpdate();
+            }
+        }
     }
 
     private void inicializarTrocas(Connection conn) throws SQLException {
-        // Verifica se a tabela já tem trocas
+        // Verifica se trocas específicas já existem
         try (Statement stm = conn.createStatement();
-                ResultSet rs = stm.executeQuery("SELECT count(*) FROM item_trocas")) {
+                ResultSet rs = stm.executeQuery(
+                        "SELECT COUNT(*) FROM item_trocas WHERE ItemId='BigMac'")) {
+
             if (rs.next() && rs.getInt(1) == 0) {
-                // Tabela vazia, inicializa trocas
+                System.out.println("→ Inicializando trocas...");
+
                 PreparedStatement pstm = conn.prepareStatement(
                         "INSERT INTO item_trocas (ItemId, AlimentoOriginalId, AlimentoTrocaId) VALUES (?, ?, ?)");
 
-                // BigMac: carne_vaca pode ser trocada por carne_frango
-                pstm.setString(1, "BigMac");
-                pstm.setString(2, "carne_vaca");
-                pstm.setString(3, "carne_frango");
-                pstm.executeUpdate();
+                // Trocas bidirecionais para BigMac
+                String[][] trocas = {
+                        // carne_vaca <-> carne_frango
+                        { "BigMac", "carne_vaca", "carne_frango" },
+                        { "BigMac", "carne_frango", "carne_vaca" },
+                        // carne_vaca <-> bacon
+                        { "BigMac", "carne_vaca", "bacon" },
+                        { "BigMac", "bacon", "carne_vaca" },
+                        // pao_normal <-> pao_brioche
+                        { "BigMac", "pao_normal", "pao_brioche" },
+                        { "BigMac", "pao_brioche", "pao_normal" }
+                };
 
-                // BigMac: carne_vaca pode ser trocada por bacon
-                pstm.setString(1, "BigMac");
-                pstm.setString(2, "carne_vaca");
-                pstm.setString(3, "bacon");
-                pstm.executeUpdate();
-
-                // BigMac: pao_normal pode ser trocado por pao_brioche
-                pstm.setString(1, "BigMac");
-                pstm.setString(2, "pao_normal");
-                pstm.setString(3, "pao_brioche");
-                pstm.executeUpdate();
-
-                // batataFrita: batata pode ser trocada por nugget (opcional)
-                pstm.setString(1, "batataFrita");
-                pstm.setString(2, "batata");
-                pstm.setString(3, "nugget");
-                pstm.executeUpdate();
-
-                System.out.println("→ Todas as trocas inseridas com sucesso!");
+                for (String[] troca : trocas) {
+                    pstm.setString(1, troca[0]);
+                    pstm.setString(2, troca[1]);
+                    pstm.setString(3, troca[2]);
+                    pstm.executeUpdate();
+                }
 
                 pstm.close();
+                System.out.println("✓ Trocas inicializadas com sucesso!\n");
             }
         }
     }

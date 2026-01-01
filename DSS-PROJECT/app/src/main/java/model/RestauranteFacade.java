@@ -45,6 +45,7 @@ public class RestauranteFacade implements InterRestauranteL{
     public boolean registaTroca(String idProduto, String idAlimentoAtual, String idAlimentoDesejado) throws PedidoException{
         Alimento alimentoDesejado = this.gestao.getAlimento(idAlimentoDesejado);
         boolean registou = this.pedidos.registaTroca(idProduto, idAlimentoAtual, alimentoDesejado);
+        
         return registou;
     }
 
