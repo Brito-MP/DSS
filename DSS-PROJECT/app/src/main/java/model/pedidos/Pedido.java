@@ -4,20 +4,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Pedido {
-    private static long Id;
+    private static long IdCounter;
     private long idInstance;
     private double tempoConfecaoEsperado;
-    private double tempoConfecaoReal; // ??????????????????
-    // private TalaoPagamento talaoPagamento;
-    private String nota; // ?? Nota como string ou Class ??
+    private double tempoConfecaoReal; // vai ser incrementado pelo funcionario se houver atraso
+    // private TalaoPagamento talaoPagamento; acho que n é necessario, o toString faz isto
+    private String nota; // ?? metemos List para suportar varias notas ??
     private List<Produto> produtos;
-    private Estado estado;
+    private Estado estado; // PorPagar (nao sei se e necessario este estado porque o pedido nao entra na BD antes de ser pago), EmPreparacao, Concluido, Entregue 
     private double preco;
     private boolean tipo; // true -> restaurante; false -> takeaway
-    private String tipoString;
 
+    // ====================================================================================================
+    //  CONSTRUTORES
+    // ====================================================================================================
     public Pedido() {
-        this.idInstance = Pedido.Id++;
+        this.idInstance = Pedido.IdCounter++;
         this.tempoConfecaoEsperado = 0;
         this.tempoConfecaoReal = 0;
         this.nota = "";
@@ -25,10 +27,9 @@ public class Pedido {
         this.estado = Estado.PorPagar;
         this.preco = 0;
         this.tipo = true;
-        this.tipoString = "Restaurante";
     }
 
-    public Pedido(List<Produto> produtosSelecionados, String nota, boolean tipo) {
+    public Pedido(List<Produto> produtosSelecionados, String nota, boolean tipo, double preco, double tempoConfecaoEsperado) {
         this();
         for (Produto p : produtosSelecionados) {
             this.produtos.add(p.clone());
@@ -39,16 +40,87 @@ public class Pedido {
         this.tempoConfecaoReal = this.tempoConfecaoEsperado;
         this.nota = nota;
         this.tipo = tipo;
-        this.tipoString = this.tipo ? "Restaurante" : "TakeAway";
+        this.preco = preco;
+        this.tempoConfecaoEsperado = tempoConfecaoEsperado;
     }
 
-    public Long getId() {
+    // ====================================================================================================
+    // GETTERS E SETTERS
+    // ====================================================================================================
+    public Long getIdCounter() {
         return this.idInstance;
     }
 
-    public void pagamentoConcluido() {
-        this.estado = Estado.Concluido;
+    public void setId(long id) {
+        this.idInstance = id;
     }
+
+    public void setEstado(Estado estado) {
+        this.estado = estado;
+    }
+
+    public void setNota(String nota) {
+        this.nota = nota;
+    }
+
+    public void setPreco(double preco) {
+        this.preco = preco;
+    }
+
+    public void setTempoConfecaoEsperado(double tempoConfecaoEsperado) {
+        this.tempoConfecaoEsperado = tempoConfecaoEsperado;
+    }
+
+    public void setTempoConfecaoReal(double tempoConfecaoReal) {
+        this.tempoConfecaoReal = tempoConfecaoReal;
+    }
+
+    public void setTipo(boolean tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setProdutos(List<Produto> produtos) {
+        this.produtos = produtos;
+    }
+
+    public Estado getEstado() {
+        return this.estado;
+    }
+
+    public String getNota() {
+        return this.nota;
+    }
+
+    public double getPreco() {
+        return this.preco;
+    }
+
+    public double getTempoConfecaoEsperado() {
+        return this.tempoConfecaoEsperado;
+    }
+
+    public double getTempoConfecaoReal() {
+        return this.tempoConfecaoReal;
+    }
+
+    public boolean getTipo() {
+        return this.tipo;
+    }
+
+    public List<Produto> getProdutos() {
+        return this.produtos;
+    }
+
+    // ====================================================================================================
+    // MÉTODOS
+    // ====================================================================================================
+    public void pagamentoConcluido() {
+        this.estado = Estado.EmPreparacao;
+    }
+
+    // ====================================================================================================
+    // TOSTRING CLONE EQUALS
+    // ====================================================================================================
 
     public Pedido clone() {
         Pedido cloned = new Pedido();
@@ -63,14 +135,14 @@ public class Pedido {
     }
 
     @Override
-    public String toString() { 
+    public String toString() {
         return "\nPedido\n{id: " + idInstance +
                 ",\n estado: " + estado +
                 ",\n nota: " + nota +
                 ",\n preço: " + preco +
                 ",\n tempoConfecaoEsperado: " + tempoConfecaoEsperado +
                 ",\n tempoConfecaoReal: " + tempoConfecaoReal +
-                ", \n tipo: " + tipoString +
+                ", \n tipo: " + (this.tipo ? "Restaurante" : "TakeAway") +
                 ",\n produtos: " + produtos.toString() + "\n";
     }
 

@@ -5,12 +5,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Workstation implements Serializable {
-    private List <Food> foods;
+    //private List <Food> foods;
     private WorkstationType workstationType;
 
 
     public Workstation (WorkstationType workstationType){
-        this.foods = new ArrayList<>();
+       // this.foods = new ArrayList<>();
         this.workstationType = workstationType;
     }
 

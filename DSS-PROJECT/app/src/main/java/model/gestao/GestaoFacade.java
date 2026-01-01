@@ -1,13 +1,38 @@
 package model.gestao;
 
+import java.util.Collection;
 import java.util.Map;
 
+import data.AlimentoDAO;
+
 public class GestaoFacade implements InterGestaoL {
-    Map<String,Alimento> alimentos;
+    Map<String, Alimento> alimentos;
+
+    // ====================================================================================================
+    // CONSTRUTORES
+    // ====================================================================================================
+    public GestaoFacade() {
+        this.alimentos = AlimentoDAO.getInstance();
+    }
+
+    // ====================================================================================================
+    // GETTERS E SETTERS
+    // ====================================================================================================
 
     @Override
     public Alimento getAlimento(String idAlimento) {
-        return this.alimentos.get(idAlimento).clone();
+        Alimento a = this.alimentos.get(idAlimento);
+        if (a != null) {
+            return a.clone();
+        }
+        return null;
     }
-    
+
+    // ====================================================================================================
+    // MÉTODOS
+    // ====================================================================================================
+
+    // ====================================================================================================
+    // TOSTRING CLONE EQUALS
+    // ====================================================================================================
 }

@@ -24,6 +24,8 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
 
+    implementation("org.mariadb.jdbc:mariadb-java-client:3.5.3")
+    
     // Se quiserermos usar uma lib tipo Jackson para JSON
     //implementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
 

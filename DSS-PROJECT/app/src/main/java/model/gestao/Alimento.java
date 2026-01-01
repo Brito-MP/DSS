@@ -5,37 +5,61 @@ public class Alimento {
     private String id;
     private String nome;
 
-    public Alimento(){
+    // ====================================================================================================
+    // CONSTRUTORES
+    // ====================================================================================================
+    public Alimento() {
         this.quantidade = 0;
         this.id = "";
         this.nome = "";
     }
 
-    public Alimento(int quantidade, String id, String nome){
+    public Alimento(int quantidade, String id, String nome) {
         this.quantidade = quantidade;
         this.id = id;
         this.nome = nome;
     }
 
-    public Alimento(Alimento alimento){
-        this.quantidade= alimento.getQuantidade();
+    public Alimento(Alimento alimento) {
+        this.quantidade = alimento.getQuantidade();
         this.id = alimento.getId();
         this.nome = alimento.getNome();
     }
 
-    public int getQuantidade(){
+    // ====================================================================================================
+    // GETTERS E SETTERS
+    // ====================================================================================================
+    public int getQuantidade() {
         return this.quantidade;
     }
 
-    public String getId(){
+    public void setQuantidade(int quantidade) {
+        this.quantidade = quantidade;
+    }
+
+    public String getId() {
         return this.id;
     }
 
-    public String getNome(){
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getNome() {
         return this.nome;
     }
 
-    public Alimento clone(){
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+    // ====================================================================================================
+    // MÉTODOS
+    // ====================================================================================================
+
+    // ====================================================================================================
+    // TOSTRING CLONE EQUALS
+    // ====================================================================================================
+    public Alimento clone() {
         return new Alimento(this.quantidade, this.id, this.nome);
     }
 }

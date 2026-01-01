@@ -8,6 +8,9 @@ public abstract class Produto {
     private String nome;
     private double tempoConfecaoEsperado;
 
+    // ====================================================================================================
+    // CONSTRUTORES
+    // ====================================================================================================
     public Produto() {
         this.id = "";
         this.preco = 0;
@@ -21,9 +24,9 @@ public abstract class Produto {
         this.tempoConfecaoEsperado = tempoConfecaoEsperado;
     }
 
-    @Override
-    public abstract Produto clone();
-
+    // ====================================================================================================
+    // GETTERS E SETTERS
+    // ====================================================================================================
     public String getId() {
         return this.id;
     }
@@ -40,13 +43,23 @@ public abstract class Produto {
         return this.tempoConfecaoEsperado;
     }
 
+    // ====================================================================================================
+    // MÉTODOS
+    // ====================================================================================================
+
     public abstract void registaTroca(String idAlimentoAtual, Alimento alimentoDesejado) throws PedidoException;
 
+    // ====================================================================================================
+    // TOSTRING CLONE EQUALS
+    // ====================================================================================================
     @Override
     public String toString() {
-        return  " id: " + id +
+        return " id: " + id +
                 ", nome: " + nome +
                 ", preco: " + preco +
                 ", tempoConfecaoEsperado: " + tempoConfecaoEsperado + "\n";
     }
+
+    @Override
+    public abstract Produto clone();
 }

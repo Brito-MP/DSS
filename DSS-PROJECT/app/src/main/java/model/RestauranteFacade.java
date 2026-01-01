@@ -4,6 +4,7 @@ import java.util.List;
 
 import model.preparacoes.InterPreparacoesL;
 import model.gestao.Alimento;
+import model.gestao.GestaoFacade;
 import model.gestao.InterGestaoL;
 import model.pedidos.InterPedidoL;
 import model.pedidos.PedidoException;
@@ -16,9 +17,10 @@ public class RestauranteFacade implements InterRestauranteL{
     private InterPedidoL pedidos;
 
     public RestauranteFacade (){
-        this.gestao = null;
-        this.preparacoes = null;
         this.pedidos = new PedidosFacade();
+        this.gestao = new GestaoFacade();
+        this.preparacoes = null;
+        
     }
 
 
@@ -32,11 +34,6 @@ public class RestauranteFacade implements InterRestauranteL{
     @Override
     public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo) {
         return this.pedidos.registaPedido(codigoProdutos, nota, tipo);
-    }
-
-    @Override
-    public void registaItem(String id, double preco, String nome, float tempoConfecaoEsperado){
-        this.pedidos.registaItem(id,preco,nome, tempoConfecaoEsperado);
     }
 
     @Override

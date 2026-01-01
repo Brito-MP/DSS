@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class Restaurant implements Serializable {
-    private Map <String, Food> foods;
+   // private Map <String, Food> foods;
     private Map <Integer, Employee> employees;
     private Map <Integer, Order> orders;
     private Map <Integer, Client> clients;
@@ -18,7 +18,7 @@ public class Restaurant implements Serializable {
     
 
     public Restaurant(){
-        this.foods = new LinkedHashMap<>();
+        //this.foods = new LinkedHashMap<>();
         this.employees = new LinkedHashMap<>();
         this.orders = new LinkedHashMap<>();
         this.clients = new LinkedHashMap<>();
@@ -59,8 +59,8 @@ public class Restaurant implements Serializable {
 
     public void initializeDefaultData() {
     
-        Food alface = new Food("alface",10);
-        this.foods.put(alface.getName(),alface);
+        //Food alface = new Food("alface",10);
+       // this.foods.put(alface.getName(),alface);
 
         Employee Gonçalo = new Employee("Gonçalo", WorkstationType.MOTOBOY);
         this.employees.put(Gonçalo.getId(), Gonçalo);
@@ -72,7 +72,7 @@ public class Restaurant implements Serializable {
         this.clients.put(client1.getId(),client1);
     }
 
-    public Map<String,Food> getFoods(){return foods;}
+    //public Map<String,Food> getFoods(){return foods;}
     public Map<Integer, Employee> getEmployees() { return employees; }
     public Map<Integer, Order> getOrders() { return orders; }
     public Map<Integer, Client> getClients() { return clients; }

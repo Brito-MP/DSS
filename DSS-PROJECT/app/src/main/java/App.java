@@ -13,106 +13,62 @@ public class App {
 
     public static void main(String[] args) {
         App app = new App();
-        //app.run();
+        app.testaDAO();
+        // app.run();
     }
 
     public App() {
         this.model = new RestauranteFacade();
 
-        this.model.registaItem("BigMac", 20, "BigMac", 300);
-        this.model.registaItem("batataFrita", 4, "Batatas Fritas", 100);
-        this.model.registaItem("Coca-Cola", 1.5, "Coca-Cola", 300);
 
-        this.model.registaItem("McChicken", 7, "McChicken", 200);
-        this.model.registaItem("Nuggets", 6, "Nuggets", 80);
-        this.model.registaItem("Sumol", 1, "Sumol", 1);
-
-
-
-        long pedidoId = this.model.registaPedido(
-            Arrays.asList("BigMac", "batataFrita", "Coca-Cola"),
-            "batataSemSal",
-            true
-        );
-
-        long pedidoId1 = this.model.registaPedido(
-            Arrays.asList("McChicken", "Nuggets", "Sumol"),
-            "carneExtra", 
-            false
-        );
-
-        System.out.println("Pedido registado com ID: " + pedidoId);
-        System.out.println("Pedido registado com ID: " + pedidoId1);
-
-
-        this.model.validaPagamento(pedidoId);
-        this.model.validaPagamento(pedidoId1);
-
-
-        /*
-         * try {
-         * model = Restaurant.readObj("Restaurante.obj");
-         * } catch (IOException | ClassNotFoundException e) {
-         * System.out.println("Oops! Não consegui ler! " + e.getMessage());
-         * model = new Restaurant(); // Cria uma nova instância de Restaurante
-         * model.initializeDefaultData(); // Inicializa os dados padrão
-         * try {
-         * model.save("Restaurante.obj"); // Save the newly created object
-         * } catch (IOException saveException) {
-         * System.out.println("Oops! Não consegui gravar! " +
-         * saveException.getMessage());
-         * }
-         * }
-         * scanner = new Scanner(System.in);
-         */
     }
-/* 
-    private void run() {
-        NewMenu menu = new NewMenu(new String[] {
-                "Data 🔐",
-        });
-        menu.setHandler(1, this::showData);
-        // menu.setHandler(2, this::createUser);
 
-        // System.out.println(model.getMusics());
-        menu.run();
+    private void testaDAO() {
+        System.out.println("========== TESTE DAO ==========\n");
+
         try {
-            model.save("Restaurante.obj");
-        } catch (IOException e) {
-            System.out.println("Oops! Não consegui gravar! " + e.getMessage());
-        } finally {
-            scanner.close();
+
+            // Criar primeiro pedido
+            System.out.println(" Criando primeiro pedido...");
+            long pedidoId1 = this.model.registaPedido(
+                    Arrays.asList("BigMac", "batataFrita", "coca_cola"),
+                    "batataSemSal",
+                    true);
+            System.out.println("   Pedido 1 criado com ID: " + pedidoId1 + "\n");
+
+            // Criar segundo pedido
+            System.out.println(" Criando segundo pedido...");
+            long pedidoId2 = this.model.registaPedido(
+                    Arrays.asList("BigMac", "coca_cola"),
+                    "semCebola",
+                    false);
+            System.out.println("   Pedido 2 criado com ID: " + pedidoId2 + "\n");
+
+            // Validar pagamentos
+            System.out.println(" Validando pagamentos...");
+            this.model.validaPagamento(pedidoId1);
+            this.model.validaPagamento(pedidoId2);
+            System.out.println("   Pagamentos validados!\n");
+
+            // Testar trocas
+            System.out.println(" Testando trocas de alimentos...");
+            try {
+                boolean trocaRealizada = this.model.registaTroca("BigMac", "carne_vaca", "carne_frango");
+                if (trocaRealizada) {
+                    System.out.println("   Troca realizada com sucesso!\n");
+                } else {
+                    System.out.println("   Troca não foi possível realizar.\n");
+                }
+            } catch (Exception e) {
+                System.out.println("   Erro ao tentar troca: " + e.getMessage() + "\n");
+            }
+
+            System.out.println("========== FIM DO TESTE DAO ==========\n");
+
+        } catch (Exception e) {
+            System.out.println("Erro durante o teste: " + e.getMessage());
+            e.printStackTrace();
         }
     }
-
-    private void showData() {
-        System.out.println("\n");
-        System.out.println("Foods:");
-        if (model.getFoods().isEmpty()) {
-            System.out.println(" (empty)");
-        } else {
-            model.getFoods().forEach((name, food) -> System.out.println(food.toString()));
-        }
-
-        System.out.println("\nEmployees:");
-        if (model.getEmployees().isEmpty()) {
-            System.out.println(" (empty)");
-        } else {
-            model.getEmployees().forEach((id, emp) -> System.out.println(emp.toString()));
-        }
-
-        System.out.println("\nOrders:");
-        if (model.getOrders().isEmpty()) {
-            System.out.println(" (empty)");
-        } else {
-            model.getOrders().forEach((id, ord) -> System.out.println(ord.toString()));
-        }
-
-        System.out.println("\nClients:");
-        if (model.getClients().isEmpty()) {
-            System.out.println(" (empty)");
-        } else {
-            model.getClients().forEach((id, client) -> System.out.println(" - " + id + " -> " + client.toString()));
-        }
-    } */
+    
 }
