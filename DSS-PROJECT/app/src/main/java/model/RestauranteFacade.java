@@ -40,6 +40,7 @@ public class RestauranteFacade implements InterRestauranteL{
     @Override
     public void validaPagamento(long idPedido){
         this.pedidos.validaPagamento(idPedido);
+        //this.gestao.adicionaListaPedidos(idPedido); implementar na gestao
     }
 
     @Override
