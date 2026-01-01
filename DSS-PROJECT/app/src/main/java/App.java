@@ -38,8 +38,8 @@ public class App {
             // Criar segundo pedido
             System.out.println(" Criando segundo pedido...");
             long pedidoId2 = this.model.registaPedido(
-                    Arrays.asList("BigMac", "coca_cola"),
-                    "semCebola",
+                    Arrays.asList("menumcchicken"),
+                    "ketchupExtra",
                     false);
             System.out.println("   Pedido 2 criado com ID: " + pedidoId2 + "\n");
 
