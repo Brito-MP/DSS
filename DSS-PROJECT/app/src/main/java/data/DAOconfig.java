@@ -12,12 +12,12 @@ package data;
  * @author DSS
  * @version 20230915
  */
-
 public class DAOconfig {
-    static final String USERNAME = "root";                        // Actualizar
-    static final String PASSWORD = "1234";                    // Actualizar
+
+    public static final String USERNAME = "root";                        // Actualizar
+    public static final String PASSWORD = "1234";                    // Actualizar
     private static final String DATABASE = "Restaurante";          // Actualizar
     private static final String DRIVER = "jdbc:mariadb";        // Usar para MariaDB
     //private static final String DRIVER = "jdbc:mysql";        // Usar para MySQL
-    static final String URL = DRIVER+"://localhost:3306/"+DATABASE;
+    public static final String URL = DRIVER + "://localhost:3306/" + DATABASE;
 }

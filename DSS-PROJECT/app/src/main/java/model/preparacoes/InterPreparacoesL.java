@@ -8,6 +8,8 @@ public interface InterPreparacoesL {
 
     void removerPedidoFila(long idPedido, List<Long> filaPedidos);
 
+    void adicionaListaPedidos(long idPedido);
+
     void requisitarIngredientes(long idPedido, String idPosto);
 
     void atrasarPedido(long idPedido, double tempoAtraso);

@@ -24,6 +24,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
     // ====================================================================================================
     public PreparacoesFacade() {
         this.postos = PostoDAO.getInstance();
+        this.filaPedidos = new ArrayList<>();
     }
 
     @Override
@@ -64,6 +65,16 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
         if (pedido.getEstado() == Estado.Concluido) {
             filaPedidos.remove(idPedido);
+        }
+    }
+
+    @Override
+    public void adicionaListaPedidos(long idPedido) {
+        if (this.filaPedidos == null) {
+            this.filaPedidos = new ArrayList<>();
+        }
+        if (!this.filaPedidos.contains(idPedido)) {
+            this.filaPedidos.add(idPedido);
         }
     }
 
