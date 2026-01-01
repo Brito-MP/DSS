@@ -2,13 +2,14 @@ package model;
 
 import java.util.List;
 
-import model.preparacoes.InterPreparacoesL;
 import model.gestao.Alimento;
 import model.gestao.GestaoFacade;
 import model.gestao.InterGestaoL;
 import model.pedidos.InterPedidoL;
 import model.pedidos.PedidoException;
 import model.pedidos.PedidosFacade;
+import model.preparacoes.InterPreparacoesL;
+import model.preparacoes.PreparacoesFacade;
 
 
 public class RestauranteFacade implements InterRestauranteL{
@@ -19,7 +20,7 @@ public class RestauranteFacade implements InterRestauranteL{
     public RestauranteFacade (){
         this.pedidos = new PedidosFacade();
         this.gestao = new GestaoFacade();
-        this.preparacoes = null;
+        this.preparacoes = new PreparacoesFacade();
         
     }
 
