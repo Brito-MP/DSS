@@ -32,6 +32,22 @@ public class PedidoDAO implements Map<Long, Pedido> {
     private PedidoDAO() {
         try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement()) {
 
+            // // Desabilitar FK constraints temporariamente para dropar tudo limpo
+            // stm.executeUpdate("SET FOREIGN_KEY_CHECKS=0");
+
+            // // Drop de todas as tabelas para garantir recriação desde o início
+            // stm.executeUpdate("DROP TABLE IF EXISTS pedido_produto_alimentos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS pedido_produtos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS menu_itens");
+            // stm.executeUpdate("DROP TABLE IF EXISTS item_trocas");
+            // stm.executeUpdate("DROP TABLE IF EXISTS item_alimentos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS pedidos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS produtos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS alimentos");
+            // stm.executeUpdate("DROP TABLE IF EXISTS postos");
+
+            // stm.executeUpdate("SET FOREIGN_KEY_CHECKS=1");
+
             // Tabela Alimentos
             String sql = "CREATE TABLE IF NOT EXISTS alimentos ("
                     + "Id VARCHAR(50) NOT NULL PRIMARY KEY,"
@@ -88,9 +104,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     + "Tipo BOOLEAN DEFAULT TRUE)"; // true -> restaurante; false -> takeaway
             stm.executeUpdate(sql);
 
-            // Tabelas de produtos em pedidos - NÃO DROPAR para preservar dados entre
-            // execuções
-            // Apenas criar se não existirem
+            // Tabelas de produtos em pedidos - migrar schema se vier de versões antigas
+            // Drop tabela dependente para poder ajustar a PK de pedido_produtos
+            stm.executeUpdate("DROP TABLE IF EXISTS pedido_produto_alimentos");
 
             // Tabela Pedido_Produtos (relaciona pedidos com produtos)
             // Sequencia permite múltiplos produtos iguais no mesmo pedido (ex: 4 batatas

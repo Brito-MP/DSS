@@ -20,6 +20,12 @@ public interface InterRestauranteL {
 
     public Map<String, Alimento> getAlimentosItem(long idPedido, String idProduto) throws PedidoException;
 
+    public double apresentaTempoConfecao();
+
+    public Map<String, Integer> apresentaStock();
+
+    public void enviaMensagem(String mensagem);
+    
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException;
 

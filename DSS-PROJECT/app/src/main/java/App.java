@@ -57,7 +57,24 @@ public class App {
 
     // ========== MENUS DE UTILIZADOR ==========
     private void menuCOO() {
-        System.out.println("Menu COO - Em construção");
+        NewMenu menu = new NewMenu(new String[] {
+                "Ver Tempo Médio de Confecção",
+                "Ver Stock de Alimentos"
+        });
+
+        menu.setHandler(1, () -> {
+            double tempoMedio = model.apresentaTempoConfecao();
+            System.out.printf("Tempo médio de confecção: %.2f minutos\n",tempoMedio);
+        });
+        menu.setHandler(2, () -> {
+            Map<String, Integer> stock = model.apresentaStock();
+            System.out.println("Stock de Alimentos:\n");
+            for(Map.Entry<String, Integer> entry : stock.entrySet()){
+                System.out.println("Alimento ID: " + entry.getKey() + " | Quantidade: " + entry.getValue());
+            }
+        });
+
+        menu.run();
     }
 
     private void menuFuncionario() {
