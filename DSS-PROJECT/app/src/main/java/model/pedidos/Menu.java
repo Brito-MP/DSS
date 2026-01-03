@@ -51,7 +51,12 @@ public class Menu extends Produto {
     // ====================================================================================================
     @Override
     public Menu clone() {
-        return new Menu(super.getId(), super.getPreco(), super.getNome(), super.getTempoConfecaoEsperado(), this.itens);
+        // Clonar cada item profundamente (ESSENCIAL para manter composição isolada)
+        List<Item> itensClonados = new ArrayList<>();
+        for (Item item : this.itens) {
+            itensClonados.add(item.clone());
+        }
+        return new Menu(super.getId(), super.getPreco(), super.getNome(), super.getTempoConfecaoEsperado(), itensClonados);
     }
 
 }

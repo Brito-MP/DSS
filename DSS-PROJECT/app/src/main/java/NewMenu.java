@@ -1,3 +1,4 @@
+
 /** ****************************************************************************** */
 /** DISCLAIMER: Este código foi criado e alterado durante as aulas práticas */
 /** de POO. Representa uma solução em construção, com base na matéria leccionada */
@@ -8,7 +9,6 @@
 /** procurar soluções alternativas, à medida que forem adquirindo mais */
 /** conhecimentos de POO. */
 /** ****************************************************************************** */
-
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,7 +28,7 @@ public class NewMenu {
     /**
      * Functional interface para handlers.
      */
-    public interface Handler {  // método de tratamento
+    public interface Handler { // método de tratamento
 
         public void execute();
     }
@@ -48,9 +48,9 @@ public class NewMenu {
     private static Scanner is = new Scanner(System.in);
 
     // Variáveis de instância
-    private List<String> opcoes;            // Lista de opções
-    private List<PreCondition> disponivel;  // Lista de pré-condições
-    private List<Handler> handlers;         // Lista de handlers
+    private List<String> opcoes; // Lista de opções
+    private List<PreCondition> disponivel; // Lista de pré-condições
+    private List<Handler> handlers; // Lista de handlers
 
     // Construtor
     /**
@@ -70,21 +70,29 @@ public class NewMenu {
     /**
      * Correr o NewMenu.
      *
-     * Termina com a opção 0 (zero).
+     * Termina com Voltar (opcoes.size() + 1) ou Sair (opcoes.size() + 2).
      */
     public void run() {
         int op;
         do {
             show();
             op = readOption();
+            // Opção Sair
+            if (op == this.opcoes.size() + 2) {
+                System.exit(0);
+            }
+            // Opção Voltar
+            else if (op == this.opcoes.size() + 1) {
+                break;
+            }
             // testar pré-condição
-            if (op > 0 && !this.disponivel.get(op - 1).validate()) {
+            else if (op > 0 && !this.disponivel.get(op - 1).validate()) {
                 System.out.println("Invalid Option! Try Again.");
             } else if (op > 0) {
                 // executar handler
                 this.handlers.get(op - 1).execute();
             }
-        } while (op != 0);
+        } while (true);
     }
 
     /**
@@ -97,8 +105,16 @@ public class NewMenu {
 
         show();
         op = readOption();
+        // Opção Sair
+        if (op == this.opcoes.size() + 2) {
+            System.exit(0);
+        }
+        // Opção Voltar - simplesmente retorna sem executar handler
+        else if (op == this.opcoes.size() + 1) {
+            return;
+        }
         // testar pré-condição
-        if (op > 0 && !this.disponivel.get(op - 1).validate()) {
+        else if (op > 0 && !this.disponivel.get(op - 1).validate()) {
             System.out.println("Invalid Option! Try Again.");
         } else if (op > 0) {
             // executar handler
@@ -132,13 +148,14 @@ public class NewMenu {
      * Apresentar o NewMenu
      */
     private void show() {
-        System.out.println("\n *** Restaurante *** ");
-        for (int i=0; i<this.opcoes.size(); i++) {
-            System.out.print(i+1);
+        System.out.println("\n ======= McLei ======= \n");
+        for (int i = 0; i < this.opcoes.size(); i++) {
+            System.out.print(i + 1);
             System.out.print(" - ");
             System.out.println(this.disponivel.get(i).validate() ? this.opcoes.get(i) : "---");
         }
-        System.out.println("0 - Go Back");
+        System.out.println((this.opcoes.size() + 1) + " - Voltar");
+        System.out.println((this.opcoes.size() + 2) + " - Sair\n");
     }
 
     /**
@@ -146,7 +163,7 @@ public class NewMenu {
      */
     private int readOption() {
         int op;
-        //Scanner is = new Scanner(System.in);
+        // Scanner is = new Scanner(System.in);
 
         System.out.print("Option: ");
         try {
@@ -155,7 +172,7 @@ public class NewMenu {
         } catch (NumberFormatException e) { // Não foi escrito um int
             op = -1;
         }
-        if (op < 0 || op > this.opcoes.size()) {
+        if (op < 1 || op > this.opcoes.size() + 2) {
             System.out.println("Invalid Option!!!");
             op = -1;
         }
