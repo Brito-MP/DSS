@@ -130,7 +130,7 @@ public class ProdutoDAO implements Map<String, Produto> {
                     String alimentoId = rs.getString("AlimentoId");
                     Alimento alimento = alimentoDAO.get(alimentoId);
                     if (alimento != null) {
-                        item.getAlimentos().put(alimentoId, alimento);
+                        item.setAlimento(alimentoId, alimento);
                     }
                 }
             }
@@ -148,7 +148,7 @@ public class ProdutoDAO implements Map<String, Produto> {
                     if (!item.getTrocas().containsKey(alimentoOriginal)) {
                         item.getTrocas().put(alimentoOriginal, new ArrayList<>());
                     }
-                    item.getTrocas().get(alimentoOriginal).add(alimentoTroca);
+                    item.setTroca(alimentoOriginal, alimentoTroca);
                 }
             }
         }

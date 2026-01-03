@@ -1,5 +1,6 @@
 package model.pedidos;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,8 +20,27 @@ public class Item extends Produto {
         this.trocas = new HashMap<>();
     }
 
-    public Item(String id, double preco, String nome, double tempoConfecaoEsperado) {
+    public Item(String id, double preco, String nome, double tempoConfecaoEsperado, Map<String, Alimento> alimentos,
+            Map<String, List<String>> trocas) {
+
         super(id, preco, nome, tempoConfecaoEsperado);
+
+        // Copiar alimentos um a um
+        this.alimentos = new HashMap<>();
+        for (Map.Entry<String, Alimento> entry : alimentos.entrySet()) {
+            this.alimentos.put(entry.getKey(), entry.getValue().clone());
+        }
+
+        // Copiar trocas um a um
+        this.trocas = new HashMap<>();
+        for (Map.Entry<String, List<String>> entry : trocas.entrySet()) {
+            this.trocas.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+
+    }
+
+    public Item(String id, double preco, String nome, double tempo) {
+        super(id, preco, nome, tempo);
         this.alimentos = new HashMap<>();
         this.trocas = new HashMap<>();
 
@@ -37,12 +57,23 @@ public class Item extends Produto {
         this.alimentos = alimentos;
     }
 
+    public void setAlimento(String alimentoId, Alimento alimento) {
+        this.alimentos.put(alimentoId, alimento);
+    }
+
     public Map<String, List<String>> getTrocas() {
         return this.trocas;
     }
 
     public void setTrocas(Map<String, List<String>> trocas) {
         this.trocas = trocas;
+    }
+
+    public void setTroca(String alimentoOriginal, String alimentoTroca) {
+        if (!this.trocas.containsKey(alimentoOriginal)) {
+            this.trocas.put(alimentoOriginal, new ArrayList<>());
+        }
+        this.trocas.get(alimentoOriginal).add(alimentoTroca);
     }
 
     // ====================================================================================================
@@ -68,8 +99,8 @@ public class Item extends Produto {
     // ====================================================================================================
     @Override
     public Item clone() {
-        return new Item(super.getId(), super.getPreco(), super.getNome(), super.getTempoConfecaoEsperado());
-
+        return new Item(super.getId(), super.getPreco(), super.getNome(), super.getTempoConfecaoEsperado(),
+                this.alimentos, this.trocas);
     }
 
 }

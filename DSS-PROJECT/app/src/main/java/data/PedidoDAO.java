@@ -78,18 +78,53 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     "Tipo BOOLEAN DEFAULT TRUE)"; // true -> restaurante; false -> takeaway
             stm.executeUpdate(sql);
 
+            // Tabelas de produtos em pedidos - NÃO DROPAR para preservar dados entre
+            // execuções
+            // Apenas criar se não existirem
+
             // Tabela Pedido_Produtos (relaciona pedidos com produtos)
+            // Sequencia permite múltiplos produtos iguais no mesmo pedido (ex: 4 batatas
+            // fritas)
             sql = "CREATE TABLE IF NOT EXISTS pedido_produtos (" +
                     "PedidoId BIGINT NOT NULL," +
                     "ProdutoId VARCHAR(50) NOT NULL," +
-                    "PRIMARY KEY(PedidoId, ProdutoId)," +
+                    "Sequencia INT NOT NULL," +
+                    "PRIMARY KEY(PedidoId, ProdutoId, Sequencia)," +
                     "FOREIGN KEY(PedidoId) REFERENCES pedidos(Id) ON DELETE CASCADE," +
                     "FOREIGN KEY(ProdutoId) REFERENCES produtos(Id) ON DELETE CASCADE)";
             stm.executeUpdate(sql);
 
+            // Tabela Pedido_Produto_Alimentos - ESSENCIAL para garantir a composição Pedido
+            // -> Produto -> Alimentos
+            // Esta tabela é necessária para manter alimentos específicos de cada produto em
+            // cada pedido
+            // Permite que o mesmo produto em pedidos diferentes tenha alimentos diferentes
+            // Ex: Pedido 1 tem BigMac com carne_frango, Pedido 2 tem BigMac com carne_vaca
+            // Sequencia permite distinguir produtos duplicados (ex: BigMac #1 vs BigMac #2)
+            sql = "CREATE TABLE IF NOT EXISTS pedido_produto_alimentos (" +
+                    "PedidoId BIGINT NOT NULL," +
+                    "ProdutoId VARCHAR(50) NOT NULL," +
+                    "Sequencia INT NOT NULL," +
+                    "AlimentoId VARCHAR(50) NOT NULL," +
+                    "PRIMARY KEY(PedidoId, ProdutoId, Sequencia, AlimentoId)," +
+                    "FOREIGN KEY(PedidoId, ProdutoId, Sequencia) REFERENCES pedido_produtos(PedidoId, ProdutoId, Sequencia) ON DELETE CASCADE,"
+                    +
+                    "FOREIGN KEY(AlimentoId) REFERENCES alimentos(Id) ON DELETE CASCADE)";
+            stm.executeUpdate(sql);
+
             // Inicializar produtos e relações via utilitiesDAO
-            try (Connection connInit = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD)) {
+            try (Connection connInit = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME,
+                    DAOconfig.PASSWORD)) {
                 utilitiesDAO.inicializarBaseDados(connInit);
+            }
+
+            // Inicializar o IdCounter do Pedido com o maior ID da base de dados
+            try (Statement stmCounter = conn.createStatement();
+                    ResultSet rsCounter = stmCounter.executeQuery("SELECT COALESCE(MAX(Id), 0) + 1 FROM pedidos")) {
+                if (rsCounter.next()) {
+                    long maxId = rsCounter.getLong(1);
+                    Pedido.setIdCounter(maxId);
+                }
             }
 
         } catch (SQLException e) {
@@ -195,19 +230,52 @@ public class PedidoDAO implements Map<Long, Pedido> {
     private List<Produto> getProdutosPedido(Long pedidoId, Connection conn) throws SQLException {
         List<Produto> produtos = new ArrayList<>();
         try (PreparedStatement pstm = conn.prepareStatement(
-                "SELECT ProdutoId FROM pedido_produtos WHERE PedidoId=?")) {
+                "SELECT ProdutoId, Sequencia FROM pedido_produtos WHERE PedidoId=? ORDER BY Sequencia")) {
             pstm.setLong(1, pedidoId);
             try (ResultSet rs = pstm.executeQuery()) {
                 while (rs.next()) {
                     String produtoId = rs.getString("ProdutoId");
+                    int sequencia = rs.getInt("Sequencia");
                     Produto produto = getProduto(produtoId, conn);
-                    if (produto != null) {
+
+                    // Se for Item, carregar alimentos específicos deste produto neste pedido
+                    // Garante a composição: cada pedido tem seus próprios alimentos por produto
+                    if (produto != null && produto instanceof Item) {
+                        Item item = (Item) produto;
+                        carregaAlimentosPedido(item, pedidoId, sequencia, conn);
+                        produtos.add(item);
+                    } else if (produto != null) {
                         produtos.add(produto);
                     }
                 }
             }
         }
         return produtos;
+    }
+
+    /**
+     * Carrega alimentos específicos de um item dentro de um pedido específico
+     * ESSENCIAL para garantir composição: cada pedido tem seus próprios alimentos
+     * por produto
+     * Exemplo: Pedido 1 BigMac com carne_frango, Pedido 2 BigMac com carne_vaca
+     */
+    private void carregaAlimentosPedido(Item item, Long pedidoId, int sequencia, Connection conn) throws SQLException {
+        try (PreparedStatement pstm = conn.prepareStatement(
+                "SELECT AlimentoId FROM pedido_produto_alimentos WHERE PedidoId=? AND ProdutoId=? AND Sequencia=?")) {
+            pstm.setLong(1, pedidoId);
+            pstm.setString(2, item.getId());
+            pstm.setInt(3, sequencia);
+            try (ResultSet rs = pstm.executeQuery()) {
+                item.getAlimentos().clear(); // Limpar alimentos padrão
+                while (rs.next()) {
+                    String alimentoId = rs.getString("AlimentoId");
+                    Alimento alimento = AlimentoDAO.getInstance().get(alimentoId);
+                    if (alimento != null) {
+                        item.getAlimentos().put(alimentoId, alimento);
+                    }
+                }
+            }
+        }
     }
 
     public Produto getProduto(String produtoId, Connection conn) throws SQLException {
@@ -234,7 +302,6 @@ public class PedidoDAO implements Map<Long, Pedido> {
     }
 
     private Item getItem(String id, String nome, double preco, double tempo, Connection conn) throws SQLException {
-        Item item = new Item(id, preco, nome, tempo);
 
         // Carregar alimentos do item
         Map<String, Alimento> alimentos = new HashMap<>();
@@ -253,7 +320,6 @@ public class PedidoDAO implements Map<Long, Pedido> {
                 }
             }
         }
-        item.setAlimentos(alimentos);
 
         // Carregar trocas possíveis
         Map<String, List<String>> trocas = new HashMap<>();
@@ -270,9 +336,7 @@ public class PedidoDAO implements Map<Long, Pedido> {
                 }
             }
         }
-        item.setTrocas(trocas);
-
-        return item;
+        return new Item(id, preco, nome, tempo, alimentos, trocas);
     }
 
     private Menu getMenu(String id, String nome, double preco, double tempo, Connection conn) throws SQLException {
@@ -422,14 +486,22 @@ public class PedidoDAO implements Map<Long, Pedido> {
                 pstm.executeUpdate();
             }
 
-            // Remover produtos antigos
+            // Remover alimentos e produtos antigos (garante composição limpa para este
+            // pedido)
+            try (PreparedStatement pstm = conn.prepareStatement(
+                    "DELETE FROM pedido_produto_alimentos WHERE PedidoId=?")) {
+                pstm.setLong(1, p.getIdCounter());
+                pstm.executeUpdate();
+            }
+
             try (PreparedStatement pstm = conn.prepareStatement(
                     "DELETE FROM pedido_produtos WHERE PedidoId=?")) {
                 pstm.setLong(1, p.getIdCounter());
                 pstm.executeUpdate();
             }
 
-            // Inserir produtos do pedido
+            // Inserir produtos do pedido e seus alimentos específicos (garante composição)
+            int sequencia = 0;
             for (Produto produto : p.getProdutos()) {
                 // SÓ salvar o produto se ele NÃO existir ainda na BD
                 if (!produtoExiste(produto.getId(), conn)) {
@@ -437,11 +509,45 @@ public class PedidoDAO implements Map<Long, Pedido> {
                 }
 
                 try (PreparedStatement pstm = conn.prepareStatement(
-                        "INSERT INTO pedido_produtos (PedidoId, ProdutoId) VALUES (?, ?)")) {
+                        "INSERT INTO pedido_produtos (PedidoId, ProdutoId, Sequencia) VALUES (?, ?, ?)")) {
                     pstm.setLong(1, p.getIdCounter());
                     pstm.setString(2, produto.getId());
+                    pstm.setInt(3, sequencia);
                     pstm.executeUpdate();
                 }
+
+                // Guardar alimentos específicos do produto neste pedido (ESSENCIAL para
+                // composição)
+                // Permite que produtos iguais em pedidos diferentes tenham alimentos diferentes
+                if (produto instanceof Item) {
+                    Item item = (Item) produto;
+                    try (PreparedStatement pstmAlimentos = conn.prepareStatement(
+                            "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, AlimentoId) VALUES (?, ?, ?, ?)")) {
+                        for (String alimentoId : item.getAlimentos().keySet()) {
+                            pstmAlimentos.setLong(1, p.getIdCounter());
+                            pstmAlimentos.setString(2, produto.getId());
+                            pstmAlimentos.setInt(3, sequencia);
+                            pstmAlimentos.setString(4, alimentoId);
+                            pstmAlimentos.executeUpdate();
+                        }
+                    }
+                } else if (produto instanceof Menu) {
+                    Menu menu = (Menu) produto;
+                    // Para cada item do menu, salvar seus alimentos usando o ID do Menu
+                    for (Item item : menu.getItens()) {
+                        try (PreparedStatement pstmAlimentos = conn.prepareStatement(
+                                "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, AlimentoId) VALUES (?, ?, ?, ?)")) {
+                            for (String alimentoId : item.getAlimentos().keySet()) {
+                                pstmAlimentos.setLong(1, p.getIdCounter());
+                                pstmAlimentos.setString(2, produto.getId()); // USA O ID DO MENU, NÃO DO ITEM
+                                pstmAlimentos.setInt(3, sequencia);
+                                pstmAlimentos.setString(4, alimentoId);
+                                pstmAlimentos.executeUpdate();
+                            }
+                        }
+                    }
+                }
+                sequencia++;
             }
 
             conn.commit();
@@ -486,6 +592,10 @@ public class PedidoDAO implements Map<Long, Pedido> {
     public void clear() {
         try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
                 Statement stm = conn.createStatement()) {
+            // Desabilitar FK constraints para permitir TRUNCATE
+            stm.executeUpdate("SET FOREIGN_KEY_CHECKS=0");
+
+            stm.executeUpdate("TRUNCATE pedido_produto_alimentos");
             stm.executeUpdate("TRUNCATE pedido_produtos");
             stm.executeUpdate("TRUNCATE menu_itens");
             stm.executeUpdate("TRUNCATE item_trocas");
@@ -493,6 +603,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
             stm.executeUpdate("TRUNCATE pedidos");
             stm.executeUpdate("TRUNCATE produtos");
             stm.executeUpdate("TRUNCATE alimentos");
+
+            // Reabilitar FK constraints
+            stm.executeUpdate("SET FOREIGN_KEY_CHECKS=1");
         } catch (SQLException e) {
             e.printStackTrace();
             throw new NullPointerException(e.getMessage());

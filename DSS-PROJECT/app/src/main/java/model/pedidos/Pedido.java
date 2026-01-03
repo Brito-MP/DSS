@@ -2,21 +2,24 @@ package model.pedidos;
 
 import java.util.ArrayList;
 import java.util.List;
+import model.gestao.Alimento;
 
 public class Pedido {
     private static long IdCounter;
     private long idInstance;
     private double tempoConfecaoEsperado;
     private double tempoConfecaoReal; // vai ser incrementado pelo funcionario se houver atraso
-    // private TalaoPagamento talaoPagamento; acho que n é necessario, o toString faz isto
+    // private TalaoPagamento talaoPagamento; acho que n é necessario, o toString
+    // faz isto
     private String nota; // ?? metemos List para suportar varias notas ??
     private List<Produto> produtos;
-    private Estado estado; // PorPagar (nao sei se e necessario este estado porque o pedido nao entra na BD antes de ser pago), EmPreparacao, Concluido, Entregue 
+    private Estado estado; // PorPagar (nao sei se e necessario este estado porque o pedido nao entra na BD
+                           // antes de ser pago), EmPreparacao, Concluido, Entregue
     private double preco;
     private boolean tipo; // true -> restaurante; false -> takeaway
 
     // ====================================================================================================
-    //  CONSTRUTORES
+    // CONSTRUTORES
     // ====================================================================================================
     public Pedido() {
         this.idInstance = Pedido.IdCounter++;
@@ -29,19 +32,23 @@ public class Pedido {
         this.tipo = true;
     }
 
-    public Pedido(List<Produto> produtosSelecionados, String nota, boolean tipo, double preco, double tempoConfecaoEsperado) {
-        this();
-        for (Produto p : produtosSelecionados) {
-            this.produtos.add(p.clone());
-            this.tempoConfecaoEsperado += p.getTempoConfecaoEsperado();
-            this.preco += p.getPreco();
+    public Pedido(List<Produto> produtosSelecionados, String nota, boolean tipo, double preco,
+            double tempoConfecaoEsperado) {
 
-        }
+        this();
+        this.tempoConfecaoEsperado = tempoConfecaoEsperado;
         this.tempoConfecaoReal = this.tempoConfecaoEsperado;
         this.nota = nota;
-        this.tipo = tipo;
+
+        for (Produto p : produtosSelecionados) {
+            this.produtos.add(p.clone());
+            this.preco += p.getPreco();
+        }
+
+        this.estado = Estado.PorPagar;
         this.preco = preco;
-        this.tempoConfecaoEsperado = tempoConfecaoEsperado;
+        this.tipo = tipo;
+
     }
 
     // ====================================================================================================
@@ -49,6 +56,10 @@ public class Pedido {
     // ====================================================================================================
     public Long getIdCounter() {
         return this.idInstance;
+    }
+
+    public static void setIdCounter(long id) {
+        Pedido.IdCounter = id;
     }
 
     public void setId(long id) {
@@ -116,6 +127,23 @@ public class Pedido {
     // ====================================================================================================
     public void pagamentoConcluido() {
         this.estado = Estado.EmPreparacao;
+    }
+
+    /**
+     * Realiza uma troca de alimento num produto específico deste pedido
+     * Procura o produto dentro deste pedido e faz a troca isoladamente
+     */
+    public void registaTroca(String idProduto, String idAlimentoAtual, Alimento alimentoDesejado)
+            throws PedidoException {
+        // Procurar o produto neste pedido específico
+        for (Produto produto : this.produtos) {
+            if (produto.getId().equals(idProduto)) {
+                // Fazer a troca apenas neste produto deste pedido
+                produto.registaTroca(idAlimentoAtual, alimentoDesejado);
+                return;
+            }
+        }
+        throw new PedidoException("Produto " + idProduto + " não encontrado neste pedido");
     }
 
     // ====================================================================================================

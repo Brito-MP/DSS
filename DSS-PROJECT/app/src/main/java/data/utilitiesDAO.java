@@ -13,6 +13,7 @@ public class utilitiesDAO {
         inicializarItems(conn);
         inicializarMenus(conn);
         inicializarTrocas(conn);
+        
     }
 
     private static void inicializarAlimentos(Connection conn) throws SQLException {
@@ -108,7 +109,11 @@ public class utilitiesDAO {
                         { "BigMac", "carne_vaca" },
                         { "BigMac", "cebola" },
                         { "BigMac", "pao_normal" },
-                        { "BigMac", "tomate" }
+                        { "BigMac", "tomate" },
+                        { "mcchicken", "alface"},
+                        { "mcchicken", "carne_frango"},
+                        { "mcchicken", "pao_brioche" },
+                        { "mcchicken", "tomate"}
                 };
 
                 for (String[] rel : itemAlimentos) {
