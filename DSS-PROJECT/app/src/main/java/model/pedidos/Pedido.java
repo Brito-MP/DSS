@@ -118,6 +118,11 @@ public class Pedido {
         this.estado = Estado.EmPreparacao;
     }
 
+
+    public void pedidoEntregue() {
+        this.estado = Estado.Entregue;
+    }
+
     // ====================================================================================================
     // TOSTRING CLONE EQUALS
     // ====================================================================================================

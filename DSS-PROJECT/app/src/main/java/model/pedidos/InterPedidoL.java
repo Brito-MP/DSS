@@ -13,4 +13,6 @@ public interface InterPedidoL {
     void validaPagamento(long idPedido);
 
     boolean registaTroca(String idProduto, String idAlimentoAtual, Alimento alimentoDesejado) throws PedidoException;
+
+    void atualizaEstadoPedido(Long idPedido);
 }
