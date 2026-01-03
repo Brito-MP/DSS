@@ -422,6 +422,30 @@ public class App {
                 System.out.println("   Erro ao tentar troca: " + e.getMessage() + "\n");
             }
 
+            // Testes de preparação
+            System.out.println(" Testando preparação...");
+            List<Long> fila = new ArrayList<>();
+            fila.add(pedidoId1);
+            fila.add(pedidoId2);
+
+            // Requisitar ingredientes para o primeiro pedido no postoA
+            this.model.requisitarIngredientes(pedidoId1, "postoA");
+            System.out.println("   Ingredientes requisitados para pedido " + pedidoId1 + " em postoA");
+
+            // Atrasar o primeiro pedido e reordenar a fila
+            this.model.atrasarPedido(pedidoId1, 500.0);
+            this.model.atualizaFilaPedidos(pedidoId1, fila);
+            System.out.println("   Fila após atraso e reordenação: " + fila);
+
+            // Encerrar os pedidos e removê-los da fila
+            this.model.encerrarPedido(pedidoId1, "postoA");
+            this.model.removerPedidoFila(pedidoId1, fila);
+            System.out.println("   Pedido " + pedidoId1 + " encerrado e removido da fila: " + fila);
+
+            this.model.encerrarPedido(pedidoId2, "postoA");
+            this.model.removerPedidoFila(pedidoId2, fila);
+            System.out.println("   Pedido " + pedidoId2 + " encerrado e removido da fila: " + fila + "\n");
+
             System.out.println("========== FIM DO TESTE DAO ==========\n");
 
         } catch (Exception e) {
@@ -429,4 +453,5 @@ public class App {
             e.printStackTrace();
         }
     }
+
 }
