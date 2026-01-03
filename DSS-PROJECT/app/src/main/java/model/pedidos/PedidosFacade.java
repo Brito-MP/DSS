@@ -1,7 +1,6 @@
 package model.pedidos;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -141,7 +140,26 @@ public class PedidosFacade implements InterPedidoL {
         throw new PedidoException("Produto " + idProduto + " não encontrado ou não é um Item");
     }
 
+
+
+    @Override
+    public void atualizaEstadoPedido(Long idPedido) {
+            Pedido pedido = pedidos.get(idPedido);
+            
+            if (pedido != null) {
+                pedido.pedidoEntregue();
+                pedidos.put(idPedido, pedido);
+
+                System.out.println("Pedido " + idPedido + " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); // apagar no futuro???
+            } else {
+                System.out.println("Pedido com ID " + idPedido + " não encontrado.");// apagar no futuro 
+            }
+        }
+
     // ====================================================================================================
     // TOSTRING CLONE EQUALS
     // ====================================================================================================
 }
+
+
+

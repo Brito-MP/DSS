@@ -2,6 +2,7 @@ package model.pedidos;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import model.gestao.Alimento;
 
 public class Pedido {
@@ -145,6 +146,14 @@ public class Pedido {
         }
         throw new PedidoException("Produto " + idProduto + " não encontrado neste pedido");
     }
+
+
+    public void pedidoEntregue() {
+        this.estado = Estado.Entregue;
+    }
+
+
+
 
     // ====================================================================================================
     // TOSTRING CLONE EQUALS

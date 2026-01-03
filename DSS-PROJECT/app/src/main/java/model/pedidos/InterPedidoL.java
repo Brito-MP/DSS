@@ -1,7 +1,6 @@
 package model.pedidos;
 
 import java.util.List;
-import java.util.Map;
 
 import model.gestao.Alimento;
 
@@ -23,4 +22,6 @@ public interface InterPedidoL {
 
     List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException;
+
+    void atualizaEstadoPedido(Long idPedido);
 }
