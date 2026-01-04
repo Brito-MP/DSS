@@ -90,9 +90,10 @@ public class App {
         menu.setHandler(2, () -> {
             cozinha();
         });
-        menu.setHandler(3, () -> {
+        /*menu.setHandler(3, () -> {
             embalador_empratador();
-        });
+        }); */
+        menu.runOnce();
     }
 
     private void caixa() {
@@ -129,7 +130,7 @@ public class App {
             "Encerrar pedido"
             });
 
-        menu.setHandler(1, () -> displayMenus());
+        menu.setHandler(1, () -> displayPedidosEmPreparacao());
         menu.setHandler(2, () -> requisitarIngredientes());
         menu.setHandler(3, () -> atrasarPedidoEAtualizarFila());
         menu.setHandler(4, () -> encerrarPedido());
