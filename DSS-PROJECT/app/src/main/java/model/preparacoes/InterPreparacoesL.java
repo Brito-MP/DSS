@@ -15,4 +15,6 @@ public interface InterPreparacoesL {
     void atrasarPedido(long idPedido, double tempoAtraso);
 
     void atualizaFilaPedidos(long idPedido, List<Long> filaPedidos);
+
+    List<Long> getFilaPedidos();
 }

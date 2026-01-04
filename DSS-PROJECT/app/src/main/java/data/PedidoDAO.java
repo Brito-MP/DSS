@@ -91,17 +91,16 @@ public class PedidoDAO implements Map<Long, Pedido> {
             // Tabelas de produtos em pedidos - NÃO DROPAR para preservar dados entre
             // execuções
             // Apenas criar se não existirem
-
             // Tabela Pedido_Produtos (relaciona pedidos com produtos)
             // Sequencia permite múltiplos produtos iguais no mesmo pedido (ex: 4 batatas
             // fritas)
-            sql = "CREATE TABLE IF NOT EXISTS pedido_produtos (" +
-                    "PedidoId BIGINT NOT NULL," +
-                    "ProdutoId VARCHAR(50) NOT NULL," +
-                    "Sequencia INT NOT NULL," +
-                    "PRIMARY KEY(PedidoId, ProdutoId, Sequencia)," +
-                    "FOREIGN KEY(PedidoId) REFERENCES pedidos(Id) ON DELETE CASCADE," +
-                    "FOREIGN KEY(ProdutoId) REFERENCES produtos(Id) ON DELETE CASCADE)";
+            sql = "CREATE TABLE IF NOT EXISTS pedido_produtos ("
+                    + "PedidoId BIGINT NOT NULL,"
+                    + "ProdutoId VARCHAR(50) NOT NULL,"
+                    + "Sequencia INT NOT NULL,"
+                    + "PRIMARY KEY(PedidoId, ProdutoId, Sequencia),"
+                    + "FOREIGN KEY(PedidoId) REFERENCES pedidos(Id) ON DELETE CASCADE,"
+                    + "FOREIGN KEY(ProdutoId) REFERENCES produtos(Id) ON DELETE CASCADE)";
             stm.executeUpdate(sql);
 
             // Tabela Pedido_Produto_Alimentos - ESSENCIAL para garantir a composição Pedido
@@ -111,15 +110,14 @@ public class PedidoDAO implements Map<Long, Pedido> {
             // Permite que o mesmo produto em pedidos diferentes tenha alimentos diferentes
             // Ex: Pedido 1 tem BigMac com carne_frango, Pedido 2 tem BigMac com carne_vaca
             // Sequencia permite distinguir produtos duplicados (ex: BigMac #1 vs BigMac #2)
-            sql = "CREATE TABLE IF NOT EXISTS pedido_produto_alimentos (" +
-                    "PedidoId BIGINT NOT NULL," +
-                    "ProdutoId VARCHAR(50) NOT NULL," +
-                    "Sequencia INT NOT NULL," +
-                    "AlimentoId VARCHAR(50) NOT NULL," +
-                    "PRIMARY KEY(PedidoId, ProdutoId, Sequencia, AlimentoId)," +
-                    "FOREIGN KEY(PedidoId, ProdutoId, Sequencia) REFERENCES pedido_produtos(PedidoId, ProdutoId, Sequencia) ON DELETE CASCADE,"
-                    +
-                    "FOREIGN KEY(AlimentoId) REFERENCES alimentos(Id) ON DELETE CASCADE)";
+            sql = "CREATE TABLE IF NOT EXISTS pedido_produto_alimentos ("
+                    + "PedidoId BIGINT NOT NULL,"
+                    + "ProdutoId VARCHAR(50) NOT NULL,"
+                    + "Sequencia INT NOT NULL,"
+                    + "AlimentoId VARCHAR(50) NOT NULL,"
+                    + "PRIMARY KEY(PedidoId, ProdutoId, Sequencia, AlimentoId),"
+                    + "FOREIGN KEY(PedidoId, ProdutoId, Sequencia) REFERENCES pedido_produtos(PedidoId, ProdutoId, Sequencia) ON DELETE CASCADE,"
+                    + "FOREIGN KEY(AlimentoId) REFERENCES alimentos(Id) ON DELETE CASCADE)";
             stm.executeUpdate(sql);
 
             // Inicializar produtos e relações via utilitiesDAO
@@ -129,8 +127,7 @@ public class PedidoDAO implements Map<Long, Pedido> {
             }
 
             // Inicializar o IdCounter do Pedido com o maior ID da base de dados
-            try (Statement stmCounter = conn.createStatement();
-                    ResultSet rsCounter = stmCounter.executeQuery("SELECT COALESCE(MAX(Id), 0) + 1 FROM pedidos")) {
+            try (Statement stmCounter = conn.createStatement(); ResultSet rsCounter = stmCounter.executeQuery("SELECT COALESCE(MAX(Id), 0) + 1 FROM pedidos")) {
                 if (rsCounter.next()) {
                     long maxId = rsCounter.getLong(1);
                     Pedido.setIdCounter(maxId);
@@ -261,9 +258,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
 
     /**
      * Carrega alimentos específicos de um item dentro de um pedido específico
-     * ESSENCIAL para garantir composição: cada pedido tem seus próprios alimentos
-     * por produto
-     * Exemplo: Pedido 1 BigMac com carne_frango, Pedido 2 BigMac com carne_vaca
+     * ESSENCIAL para garantir composição: cada pedido tem seus próprios
+     * alimentos por produto Exemplo: Pedido 1 BigMac com carne_frango, Pedido 2
+     * BigMac com carne_vaca
      */
     private void carregaAlimentosPedido(Item item, Long pedidoId, int sequencia, Connection conn) throws SQLException {
         try (PreparedStatement pstm = conn.prepareStatement(
@@ -594,10 +591,30 @@ public class PedidoDAO implements Map<Long, Pedido> {
         }
     }
 
+    public List<Pedido> getPedidosPorEstado(Estado estado) {
+        List<Pedido> pendentes = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn
+                .prepareStatement("SELECT Id FROM pedidos WHERE Estado=? ORDER BY Id")) {
+            pstm.setString(1, estado.name());
+            try (ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    long id = rs.getLong("Id");
+                    Pedido pedido = this.get(id);
+                    if (pedido != null) {
+                        pendentes.add(pedido);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new NullPointerException(e.getMessage());
+        }
+        return pendentes;
+    }
+
     @Override
     public void clear() {
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
-                Statement stm = conn.createStatement()) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement()) {
             // Desabilitar FK constraints para permitir TRUNCATE
             stm.executeUpdate("SET FOREIGN_KEY_CHECKS=0");
 

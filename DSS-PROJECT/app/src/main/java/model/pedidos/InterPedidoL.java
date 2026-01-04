@@ -11,7 +11,6 @@ public interface InterPedidoL {
 
     // void registaItem(String id, double preco, String nome, double
     // tempoConfecaoEsperado);
-
     void validaPagamento(long idPedido);
 
     boolean registaTroca(long idPedido, String idProduto, String idAlimentoAtual, Alimento alimentoDesejado)
@@ -25,4 +24,8 @@ public interface InterPedidoL {
             throws PedidoException;
 
     void atualizaEstadoPedido(Long idPedido);
+
+    List<Pedido> getPedidosPorPagar();
+
+    List<Pedido> getPedidosEmPreparacao();
 }
