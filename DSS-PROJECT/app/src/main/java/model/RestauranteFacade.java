@@ -72,6 +72,21 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public double apresentaTempoConfecao() {
+        return this.gestao.apresentaTempoConfecao();
+    }
+
+    @Override
+    public Map<String, Integer> apresentaStock(){
+        return this.gestao.apresentaStock();
+    }
+
+    @Override
+    public void enviaMensagem(String mensagem) {
+        this.gestao.enviaMensagem(mensagem);
+    }
+
+    @Override
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException {
         return this.pedidos.getSubstitutosDisponiveis(idPedido, idProduto, idAlimentoAtual);
