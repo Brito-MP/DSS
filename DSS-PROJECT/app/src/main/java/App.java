@@ -18,8 +18,8 @@ public class App {
     // ========== ATRIBUTOS ==========
     private InterRestauranteL model;
     private Scanner scanner;
-    private String[] menus = {"menubigmac", "menumcchicken"};
-    private String[] itens = {"BigMac", "mcchicken", "batataFrita", "coca_cola", "sumol"};
+    private String[] menus = { "menubigmac", "menumcchicken" };
+    private String[] itens = { "BigMac", "mcchicken", "batataFrita", "coca_cola", "sumol" };
     private List<String> produtos_escolhidos = new ArrayList<>();
     private String nota = "";
     private long idPedido = -1;
@@ -39,11 +39,11 @@ public class App {
 
     // ========== MENU PRINCIPAL ==========
     private void run() {
-        NewMenu menu = new NewMenu(new String[]{
-            "TestaDAO",
-            "COO",
-            "Funcionario",
-            "Cliente"
+        NewMenu menu = new NewMenu(new String[] {
+                "TestaDAO",
+                "COO",
+                "Funcionario",
+                "Cliente"
         });
 
         menu.setHandler(1, this::testaDAO);
@@ -65,12 +65,12 @@ public class App {
 
         menu.setHandler(1, () -> {
             double tempoMedio = model.apresentaTempoConfecao();
-            System.out.printf("Tempo médio de confecção: %.2f minutos\n",tempoMedio);
+            System.out.printf("Tempo médio de confecção: %.2f minutos\n", tempoMedio);
         });
         menu.setHandler(2, () -> {
             Map<String, Integer> stock = model.apresentaStock();
             System.out.println("Stock de Alimentos:\n");
-            for(Map.Entry<String, Integer> entry : stock.entrySet()){
+            for (Map.Entry<String, Integer> entry : stock.entrySet()) {
                 System.out.println("Alimento ID: " + entry.getKey() + " | Quantidade: " + entry.getValue());
             }
         });
@@ -80,9 +80,9 @@ public class App {
 
     // ========== MENUS DE PEDIDO ==========
     private void menuFuncionario() {
-        NewMenu menu = new NewMenu(new String[]{
-            "Caixa",
-            "Cozinha"
+        NewMenu menu = new NewMenu(new String[] {
+                "Caixa",
+                "Cozinha"
         });
         menu.setHandler(1, () -> {
             caixa();
@@ -90,15 +90,17 @@ public class App {
         menu.setHandler(2, () -> {
             cozinha();
         });
-        /*menu.setHandler(3, () -> {
-            embalador_empratador();
-        }); */
+        /*
+         * menu.setHandler(3, () -> {
+         * embalador_empratador();
+         * });
+         */
         menu.runOnce();
     }
 
     private void caixa() {
         List<Pedido> pendentes = model.getPedidosPorPagar();
-
+        
         String[] opcoes = new String[pendentes.size()];
         for (int i = 0; i < pendentes.size(); i++) {
             Pedido pedido = pendentes.get(i);
@@ -123,12 +125,12 @@ public class App {
 
     private void cozinha() {
 
-        NewMenu menu = new NewMenu(new String[]{
-            "Pedidos em preparação",
-            "Requisitar ingredientes",
-            "Atrasar pedido e atualizar fila",
-            "Encerrar pedido"
-            });
+        NewMenu menu = new NewMenu(new String[] {
+                "Pedidos em preparação",
+                "Requisitar ingredientes",
+                "Atrasar pedido e atualizar fila",
+                "Encerrar pedido"
+        });
 
         menu.setHandler(1, () -> displayPedidosEmPreparacao());
         menu.setHandler(2, () -> requisitarIngredientes());
@@ -139,12 +141,12 @@ public class App {
     }
 
     private void menuCliente() {
-        boolean[] pagamentoConcluido = {false};
+        boolean[] pagamentoConcluido = { false };
 
         while (!pagamentoConcluido[0]) {
-            NewMenu menu = new NewMenu(new String[]{
-                "Take Away",
-                "No Restaurante"
+            NewMenu menu = new NewMenu(new String[] {
+                    "Take Away",
+                    "No Restaurante"
             });
             menu.setHandler(1, () -> {
                 boolean pagou = takeAway();
@@ -165,16 +167,16 @@ public class App {
 
     // ========== MENUS DE PEDIDO ==========
     private boolean takeAway() {
-        boolean[] concluido = {false};
-        boolean[] pagou = {false};
+        boolean[] concluido = { false };
+        boolean[] pagou = { false };
 
         while (!concluido[0]) {
-            NewMenu menu = new NewMenu(new String[]{
-                "Menus",
-                "Itens",
-                "Pedido",
-                "Adicionar nota",
-                "Registar Pedido"
+            NewMenu menu = new NewMenu(new String[] {
+                    "Menus",
+                    "Itens",
+                    "Pedido",
+                    "Adicionar nota",
+                    "Registar Pedido"
             });
 
             menu.setHandler(1, () -> displayMenus());
@@ -198,16 +200,16 @@ public class App {
     }
 
     private boolean restaurante() {
-        boolean[] concluido = {false};
-        boolean[] pagou = {false};
+        boolean[] concluido = { false };
+        boolean[] pagou = { false };
 
         while (!concluido[0]) {
-            NewMenu menu = new NewMenu(new String[]{
-                "Menus",
-                "Itens",
-                "Pedido",
-                "Adicionar nota",
-                "Registar Pedido"
+            NewMenu menu = new NewMenu(new String[] {
+                    "Menus",
+                    "Itens",
+                    "Pedido",
+                    "Adicionar nota",
+                    "Registar Pedido"
             });
 
             menu.setHandler(1, () -> displayMenus());
@@ -232,9 +234,9 @@ public class App {
 
     // ========== DISPLAY DE MENUS E ITENS ==========
     private void displayMenus() {
-        NewMenu menu = new NewMenu(new String[]{
-            "Menu BigMac",
-            "Menu McChicken"
+        NewMenu menu = new NewMenu(new String[] {
+                "Menu BigMac",
+                "Menu McChicken"
         });
 
         menu.setHandler(1, () -> addEscolhidos(menus[0]));
@@ -244,12 +246,12 @@ public class App {
     }
 
     private void displayItens() {
-        NewMenu menu = new NewMenu(new String[]{
-            "BigMac",
-            "McChicken",
-            "Batata Frita",
-            "Coca Cola",
-            "Sumol"
+        NewMenu menu = new NewMenu(new String[] {
+                "BigMac",
+                "McChicken",
+                "Batata Frita",
+                "Coca Cola",
+                "Sumol"
         });
 
         menu.setHandler(1, () -> addEscolhidos(itens[0]));
@@ -263,10 +265,10 @@ public class App {
 
     // ========== MENUS DE PRODUTO ==========
     private void menuItem(String menuProduto) {
-        NewMenu menu = new NewMenu(new String[]{
-            "Adicionar ao Pedido",
-            "Adicionar troca",
-            "Adicionar Nota"
+        NewMenu menu = new NewMenu(new String[] {
+                "Adicionar ao Pedido",
+                "Adicionar troca",
+                "Adicionar Nota"
         });
 
         menu.setHandler(1, () -> addEscolhidos(menuProduto));
@@ -279,24 +281,40 @@ public class App {
     }
 
     private boolean menuTrocasItem(long idPedido) {
-        boolean[] pago = {false}; // Array para permitir modificação dentro da lambda
+        boolean[] pago = { false }; // Array para permitir modificação dentro da lambda
 
         while (!pago[0]) {
-            NewMenu menu = new NewMenu(new String[]{
-                "Realizar Troca",
-                "Pagar",});
+            NewMenu menu = new NewMenu(new String[] {
+                    "Realizar Troca",
+                    "Pagar", });
 
             menu.setHandler(1, () -> menuRealizarTroca(idPedido));
-            menu.setHandler(2, () -> {
-                model.validaPagamento(idPedido);
-                System.out.println("✓ Pagamento realizado com sucesso!");
-                pago[0] = true;
-            });
+            menu.setHandler(2, () -> menuPagamento(idPedido, pago));
 
             menu.runOnce();
         }
 
         return pago[0]; // Retorna true se pagou, false se saiu sem pagar
+    }
+
+    private void menuPagamento(long idPedido, boolean[] pago) {
+        NewMenu menu = new NewMenu(new String[] {
+                "MBWay",
+                "Caixa"
+        });
+
+        menu.setHandler(1, () -> {
+            model.validaPagamento(idPedido);
+            System.out.println("✓ Pagamento realizado com MBWay com sucesso!");
+            pago[0] = true;
+        });
+
+        menu.setHandler(2, () -> {
+            System.out.println("✓ Pedido registado para pagamento em Caixa!");
+            pago[0] = true;
+        });
+
+        menu.runOnce();
     }
 
     // ========== MENUS DE TROCA ==========
@@ -447,7 +465,7 @@ public class App {
             opcoes[i] = "Pedido #" + p.getIdCounter() + " | " + tipo + " | €" + String.format("%.2f", p.getPreco());
         }
 
-        final long[] selecionado = {-1};
+        final long[] selecionado = { -1 };
         NewMenu menu = new NewMenu(opcoes);
         for (int i = 0; i < pedidos.size(); i++) {
             final int idx = i;
