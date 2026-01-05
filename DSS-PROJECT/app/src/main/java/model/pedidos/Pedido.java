@@ -147,13 +147,9 @@ public class Pedido {
         throw new PedidoException("Produto " + idProduto + " não encontrado neste pedido");
     }
 
-
     public void pedidoEntregue() {
         this.estado = Estado.Entregue;
     }
-
-
-
 
     // ====================================================================================================
     // TOSTRING CLONE EQUALS
@@ -167,7 +163,12 @@ public class Pedido {
         cloned.preco = this.preco;
         cloned.tempoConfecaoEsperado = this.tempoConfecaoEsperado;
         cloned.tempoConfecaoReal = this.tempoConfecaoReal;
-        cloned.produtos = new ArrayList<>(this.produtos); // ?? clonar os objetos 1 a 1 ??
+        cloned.tipo = this.tipo;
+        // Deep clone de produtos para garantir composição isolada
+        cloned.produtos = new ArrayList<>();
+        for (Produto produto : this.produtos) {
+            cloned.produtos.add(produto.clone());
+        }
         return cloned;
     }
 
