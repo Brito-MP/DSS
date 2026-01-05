@@ -1,24 +1,25 @@
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import data.PedidoDAO;
 import model.InterRestauranteL;
 import model.RestauranteFacade;
+import model.gestao.Alimento;
 import model.pedidos.Item;
+import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
-import model.gestao.Alimento;
 
 public class App {
 
     // ========== ATRIBUTOS ==========
     private InterRestauranteL model;
     private Scanner scanner;
-    private String[] menus = { "menubigmac", "menumcchicken" };
-    private String[] itens = { "BigMac", "mcchicken", "batataFrita", "coca_cola", "sumol" };
+    private String[] menus = {"menubigmac", "menumcchicken"};
+    private String[] itens = {"BigMac", "mcchicken", "batataFrita", "coca_cola", "sumol"};
     private List<String> produtos_escolhidos = new ArrayList<>();
     private String nota = "";
     private long idPedido = -1;
@@ -38,11 +39,11 @@ public class App {
 
     // ========== MENU PRINCIPAL ==========
     private void run() {
-        NewMenu menu = new NewMenu(new String[] {
-                "TestaDAO",
-                "COO",
-                "Funcionario",
-                "Cliente"
+        NewMenu menu = new NewMenu(new String[]{
+            "TestaDAO",
+            "COO",
+            "Funcionario",
+            "Cliente"
         });
 
         menu.setHandler(1, this::testaDAO);
@@ -57,20 +58,93 @@ public class App {
 
     // ========== MENUS DE UTILIZADOR ==========
     private void menuCOO() {
-        System.out.println("Menu COO - Em construção");
+        NewMenu menu = new NewMenu(new String[] {
+                "Ver Tempo Médio de Confecção",
+                "Ver Stock de Alimentos"
+        });
+
+        menu.setHandler(1, () -> {
+            double tempoMedio = model.apresentaTempoConfecao();
+            System.out.printf("Tempo médio de confecção: %.2f minutos\n",tempoMedio);
+        });
+        menu.setHandler(2, () -> {
+            Map<String, Integer> stock = model.apresentaStock();
+            System.out.println("Stock de Alimentos:\n");
+            for(Map.Entry<String, Integer> entry : stock.entrySet()){
+                System.out.println("Alimento ID: " + entry.getKey() + " | Quantidade: " + entry.getValue());
+            }
+        });
+
+        menu.run();
     }
 
+    // ========== MENUS DE PEDIDO ==========
     private void menuFuncionario() {
-        System.out.println("Menu Funcionario - Em construção");
+        NewMenu menu = new NewMenu(new String[]{
+            "Caixa",
+            "Cozinha"
+        });
+        menu.setHandler(1, () -> {
+            caixa();
+        });
+        menu.setHandler(2, () -> {
+            cozinha();
+        });
+        /*menu.setHandler(3, () -> {
+            embalador_empratador();
+        }); */
+        menu.runOnce();
+    }
+
+    private void caixa() {
+        List<Pedido> pendentes = model.getPedidosPorPagar();
+
+        String[] opcoes = new String[pendentes.size()];
+        for (int i = 0; i < pendentes.size(); i++) {
+            Pedido pedido = pendentes.get(i);
+            String tipo = pedido.getTipo() ? "Restaurante" : "TakeAway";
+            opcoes[i] = "Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
+                    + String.format("%.2f", pedido.getPreco());
+        }
+
+        NewMenu menu = new NewMenu(opcoes);
+
+        for (int i = 0; i < pendentes.size(); i++) {
+            final int index = i;
+            menu.setHandler(i + 1, () -> {
+                Pedido pedidoSelecionado = pendentes.get(index);
+                model.validaPagamento(pedidoSelecionado.getIdCounter());
+                System.out.println("✓ Pagamento validado para o pedido " + pedidoSelecionado.getIdCounter() + ".");
+            });
+        }
+
+        menu.runOnce();
+    }
+
+    private void cozinha() {
+
+        NewMenu menu = new NewMenu(new String[]{
+            "Pedidos em preparação",
+            "Requisitar ingredientes",
+            "Atrasar pedido e atualizar fila",
+            "Encerrar pedido"
+            });
+
+        menu.setHandler(1, () -> displayPedidosEmPreparacao());
+        menu.setHandler(2, () -> requisitarIngredientes());
+        menu.setHandler(3, () -> atrasarPedidoEAtualizarFila());
+        menu.setHandler(4, () -> encerrarPedido());
+
+        menu.runOnce();
     }
 
     private void menuCliente() {
-        boolean[] pagamentoConcluido = { false };
+        boolean[] pagamentoConcluido = {false};
 
         while (!pagamentoConcluido[0]) {
-            NewMenu menu = new NewMenu(new String[] {
-                    "Take Away",
-                    "No Restaurante"
+            NewMenu menu = new NewMenu(new String[]{
+                "Take Away",
+                "No Restaurante"
             });
             menu.setHandler(1, () -> {
                 boolean pagou = takeAway();
@@ -91,16 +165,16 @@ public class App {
 
     // ========== MENUS DE PEDIDO ==========
     private boolean takeAway() {
-        boolean[] concluido = { false };
-        boolean[] pagou = { false };
+        boolean[] concluido = {false};
+        boolean[] pagou = {false};
 
         while (!concluido[0]) {
-            NewMenu menu = new NewMenu(new String[] {
-                    "Menus",
-                    "Itens",
-                    "Pedido",
-                    "Adicionar nota",
-                    "Registar Pedido"
+            NewMenu menu = new NewMenu(new String[]{
+                "Menus",
+                "Itens",
+                "Pedido",
+                "Adicionar nota",
+                "Registar Pedido"
             });
 
             menu.setHandler(1, () -> displayMenus());
@@ -124,16 +198,16 @@ public class App {
     }
 
     private boolean restaurante() {
-        boolean[] concluido = { false };
-        boolean[] pagou = { false };
+        boolean[] concluido = {false};
+        boolean[] pagou = {false};
 
         while (!concluido[0]) {
-            NewMenu menu = new NewMenu(new String[] {
-                    "Menus",
-                    "Itens",
-                    "Pedido",
-                    "Adicionar nota",
-                    "Registar Pedido"
+            NewMenu menu = new NewMenu(new String[]{
+                "Menus",
+                "Itens",
+                "Pedido",
+                "Adicionar nota",
+                "Registar Pedido"
             });
 
             menu.setHandler(1, () -> displayMenus());
@@ -158,9 +232,9 @@ public class App {
 
     // ========== DISPLAY DE MENUS E ITENS ==========
     private void displayMenus() {
-        NewMenu menu = new NewMenu(new String[] {
-                "Menu BigMac",
-                "Menu McChicken"
+        NewMenu menu = new NewMenu(new String[]{
+            "Menu BigMac",
+            "Menu McChicken"
         });
 
         menu.setHandler(1, () -> addEscolhidos(menus[0]));
@@ -170,12 +244,12 @@ public class App {
     }
 
     private void displayItens() {
-        NewMenu menu = new NewMenu(new String[] {
-                "BigMac",
-                "McChicken",
-                "Batata Frita",
-                "Coca Cola",
-                "Sumol"
+        NewMenu menu = new NewMenu(new String[]{
+            "BigMac",
+            "McChicken",
+            "Batata Frita",
+            "Coca Cola",
+            "Sumol"
         });
 
         menu.setHandler(1, () -> addEscolhidos(itens[0]));
@@ -189,10 +263,10 @@ public class App {
 
     // ========== MENUS DE PRODUTO ==========
     private void menuItem(String menuProduto) {
-        NewMenu menu = new NewMenu(new String[] {
-                "Adicionar ao Pedido",
-                "Adicionar troca",
-                "Adicionar Nota"
+        NewMenu menu = new NewMenu(new String[]{
+            "Adicionar ao Pedido",
+            "Adicionar troca",
+            "Adicionar Nota"
         });
 
         menu.setHandler(1, () -> addEscolhidos(menuProduto));
@@ -205,13 +279,12 @@ public class App {
     }
 
     private boolean menuTrocasItem(long idPedido) {
-        boolean[] pago = { false }; // Array para permitir modificação dentro da lambda
+        boolean[] pago = {false}; // Array para permitir modificação dentro da lambda
 
         while (!pago[0]) {
-            NewMenu menu = new NewMenu(new String[] {
-                    "Realizar Troca",
-                    "Pagar",
-            });
+            NewMenu menu = new NewMenu(new String[]{
+                "Realizar Troca",
+                "Pagar",});
 
             menu.setHandler(1, () -> menuRealizarTroca(idPedido));
             menu.setHandler(2, () -> {
@@ -357,6 +430,119 @@ public class App {
             }
         }
         System.out.println("Nota: " + nota + "\n");
+    }
+
+    private long escolherPedidoEmPreparacao() {
+        List<Pedido> pedidos = model.getPedidosEmPreparacao();
+
+        if (pedidos.isEmpty()) {
+            System.out.println("Nenhum pedido em preparação.");
+            return -1;
+        }
+
+        String[] opcoes = new String[pedidos.size()];
+        for (int i = 0; i < pedidos.size(); i++) {
+            Pedido p = pedidos.get(i);
+            String tipo = p.getTipo() ? "Restaurante" : "Take Away";
+            opcoes[i] = "Pedido #" + p.getIdCounter() + " | " + tipo + " | €" + String.format("%.2f", p.getPreco());
+        }
+
+        final long[] selecionado = {-1};
+        NewMenu menu = new NewMenu(opcoes);
+        for (int i = 0; i < pedidos.size(); i++) {
+            final int idx = i;
+            menu.setHandler(i + 1, () -> selecionado[0] = pedidos.get(idx).getIdCounter());
+        }
+
+        menu.runOnce();
+        return selecionado[0];
+    }
+
+    private void displayPedidosEmPreparacao() {
+        List<Pedido> pedidos = model.getPedidosEmPreparacao();
+
+        System.out.println("\n===== PEDIDOS EM PREPARAÇÃO =====");
+        if (pedidos.isEmpty()) {
+            System.out.println("Nenhum pedido em preparação!\n");
+            return;
+        }
+
+        for (Pedido pedido : pedidos) {
+            String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
+            String notaPedido = pedido.getNota() == null || pedido.getNota().isEmpty() ? "-" : pedido.getNota();
+
+            System.out.println("Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
+                    + String.format("%.2f", pedido.getPreco()));
+            System.out.println("  Nota: " + notaPedido);
+            System.out.println("  Itens:");
+
+            List<Produto> produtos = pedido.getProdutos();
+            for (int i = 0; i < produtos.size(); i++) {
+                System.out.println("    " + (i + 1) + ". " + produtos.get(i).getNome());
+            }
+            System.out.println();
+        }
+    }
+
+    private void requisitarIngredientes() {
+        long idPedido = escolherPedidoEmPreparacao();
+        if (idPedido < 0) {
+            return;
+        }
+
+        System.out.print("ID do posto: ");
+        String postoId = scanner.nextLine().trim();
+        if (postoId.isEmpty()) {
+            System.out.println("ID do posto inválido.");
+            return;
+        }
+
+        model.requisitarIngredientes(idPedido, postoId);
+        System.out.println("✓ Ingredientes requisitados para o pedido " + idPedido + " no posto " + postoId + ".");
+    }
+
+    private void atrasarPedidoEAtualizarFila() {
+        long idPedido = escolherPedidoEmPreparacao();
+        if (idPedido < 0) {
+            return;
+        }
+
+        System.out.print("Tempo de atraso (ex: 2.5): ");
+        double atraso;
+        try {
+            atraso = Double.parseDouble(scanner.nextLine().trim());
+        } catch (NumberFormatException e) {
+            System.out.println("Valor inválido.");
+            return;
+        }
+
+        model.atrasarPedido(idPedido, atraso);
+
+        List<Long> fila = model.getFilaPedidos();
+        if (fila == null) {
+            System.out.println("Fila de pedidos indisponível.");
+            return;
+        }
+
+        model.atualizaFilaPedidos(idPedido, fila);
+        System.out.println("✓ Atraso aplicado e fila atualizada: " + fila);
+    }
+
+    private void encerrarPedido() {
+        long idPedido = escolherPedidoEmPreparacao();
+        if (idPedido < 0) {
+            return;
+        }
+
+        System.out.print("ID do posto responsável: ");
+        String postoId = scanner.nextLine().trim();
+        if (postoId.isEmpty()) {
+            System.out.println("ID do posto inválido.");
+            return;
+        }
+
+        model.encerrarPedido(idPedido, postoId);
+        System.out.println("✓ Pedido " + idPedido + " encerrado no posto " + postoId + ".");
     }
 
     private String adicionaNota() {

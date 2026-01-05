@@ -51,6 +51,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
         postoDAO.put(postoId, posto);
         pedido.setEstado(Estado.Concluido);
+        removerPedidoFila(idPedido, filaPedidos);
         dao.put(idPedido, pedido);
     }
 
@@ -201,6 +202,14 @@ public class PreparacoesFacade implements InterPreparacoesL {
         filaPedidos.clear();
         filaPedidos.addAll(novaFila);
 
+    }
+
+    @Override
+    public List<Long> getFilaPedidos() {
+        if (this.filaPedidos == null) {
+            this.filaPedidos = new ArrayList<>();
+        }
+        return new ArrayList<>(this.filaPedidos);
     }
 
 }

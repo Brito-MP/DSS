@@ -12,6 +12,7 @@ import model.gestao.Alimento;
 import model.gestao.GestaoFacade;
 import model.gestao.InterGestaoL;
 import model.pedidos.InterPedidoL;
+import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.PedidosFacade;
 import model.pedidos.Produto;
@@ -19,6 +20,7 @@ import model.preparacoes.InterPreparacoesL;
 import model.preparacoes.PreparacoesFacade;
 
 public class RestauranteFacade implements InterRestauranteL {
+
     private InterGestaoL gestao;
     private InterPreparacoesL preparacoes;
     private InterPedidoL pedidos;
@@ -70,10 +72,26 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public double apresentaTempoConfecao() {
+        return this.gestao.apresentaTempoConfecao();
+    }
+
+    @Override
+    public Map<String, Integer> apresentaStock(){
+        return this.gestao.apresentaStock();
+    }
+
+    @Override
+    public void enviaMensagem(String mensagem) {
+        this.gestao.enviaMensagem(mensagem);
+    }
+
+    @Override
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException {
         return this.pedidos.getSubstitutosDisponiveis(idPedido, idProduto, idAlimentoAtual);
     }
+
     @Override
     public void encerrarPedido(long idPedido, String postoId) {
         this.preparacoes.encerrarPedido(idPedido, postoId);
@@ -97,6 +115,21 @@ public class RestauranteFacade implements InterRestauranteL {
     @Override
     public void atualizaFilaPedidos(long idPedido, List<Long> filaPedidos) {
         this.preparacoes.atualizaFilaPedidos(idPedido, filaPedidos);
+    }
+
+    @Override
+    public List<Pedido> getPedidosPorPagar() {
+        return this.pedidos.getPedidosPorPagar();
+    }
+
+    @Override
+    public List<Pedido> getPedidosEmPreparacao() {
+        return this.pedidos.getPedidosEmPreparacao();
+    }
+
+    @Override
+    public List<Long> getFilaPedidos() {
+        return this.preparacoes.getFilaPedidos();
     }
 
 }

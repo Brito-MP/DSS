@@ -9,6 +9,7 @@ import data.ProdutoDAO;
 import model.gestao.Alimento;
 
 public class PedidosFacade implements InterPedidoL {
+
     private Map<String, Produto> produtos;
     private Map<Long, Pedido> pedidos;
     // private Map<Long, Pedido> pedidos;
@@ -25,7 +26,6 @@ public class PedidosFacade implements InterPedidoL {
     // ====================================================================================================
     // GETTERS E SETTERS
     // ====================================================================================================
-
     // ====================================================================================================
     // MÉTODOS
     // ====================================================================================================
@@ -140,26 +140,41 @@ public class PedidosFacade implements InterPedidoL {
         throw new PedidoException("Produto " + idProduto + " não encontrado ou não é um Item");
     }
 
-
-
     @Override
     public void atualizaEstadoPedido(Long idPedido) {
-            Pedido pedido = pedidos.get(idPedido);
-            
-            if (pedido != null) {
-                pedido.pedidoEntregue();
-                pedidos.put(idPedido, pedido);
+        Pedido pedido = pedidos.get(idPedido);
 
-                System.out.println("Pedido " + idPedido + " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); // apagar no futuro???
-            } else {
-                System.out.println("Pedido com ID " + idPedido + " não encontrado.");// apagar no futuro 
-            }
+        if (pedido != null) {
+            pedido.pedidoEntregue();
+            pedidos.put(idPedido, pedido);
+
+            System.out.println("Pedido " + idPedido + " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); // apagar no futuro???
+        } else {
+            System.out.println("Pedido com ID " + idPedido + " não encontrado.");// apagar no futuro 
         }
+    }
+
+    @Override
+    public List<Pedido> getPedidosPorPagar() {
+        List<Pedido> pedidos = PedidoDAO.getInstance().getPedidosPorEstado(Estado.PorPagar);
+        List<Pedido> clones = new ArrayList<>();
+        for (Pedido p : pedidos) {
+            clones.add(p.clone());
+        }
+        return clones;
+    }
+
+    @Override
+    public List<Pedido> getPedidosEmPreparacao() {
+        List<Pedido> pedidos = PedidoDAO.getInstance().getPedidosPorEstado(Estado.EmPreparacao);
+        List<Pedido> clones = new ArrayList<>();
+        for (Pedido p : pedidos) {
+            clones.add(p.clone());
+        }
+        return clones;
+    }
 
     // ====================================================================================================
     // TOSTRING CLONE EQUALS
     // ====================================================================================================
 }
-
-
-
