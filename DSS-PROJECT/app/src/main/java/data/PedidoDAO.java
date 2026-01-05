@@ -30,7 +30,24 @@ public class PedidoDAO implements Map<Long, Pedido> {
     private static PedidoDAO singleton = null;
 
     private PedidoDAO() {
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement()) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                Statement stm = conn.createStatement()) {
+
+        /*     // Desabilitar FK constraints temporariamente para dropar tudo limpo
+            stm.executeUpdate("SET FOREIGN_KEY_CHECKS=0");
+
+            // Drop de todas as tabelas para garantir recriação desde o início
+            stm.executeUpdate("DROP TABLE IF EXISTS pedido_produto_alimentos");
+            stm.executeUpdate("DROP TABLE IF EXISTS pedido_produtos");
+            stm.executeUpdate("DROP TABLE IF EXISTS menu_itens");
+            stm.executeUpdate("DROP TABLE IF EXISTS item_trocas");
+            stm.executeUpdate("DROP TABLE IF EXISTS item_alimentos");
+            stm.executeUpdate("DROP TABLE IF EXISTS pedidos");
+            stm.executeUpdate("DROP TABLE IF EXISTS produtos");
+            stm.executeUpdate("DROP TABLE IF EXISTS alimentos");
+            stm.executeUpdate("DROP TABLE IF EXISTS postos");
+
+            stm.executeUpdate("SET FOREIGN_KEY_CHECKS=1"); */
 
             // Tabela Alimentos
             String sql = "CREATE TABLE IF NOT EXISTS alimentos ("
@@ -153,7 +170,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
     @Override
     public int size() {
         int i = 0;
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement(); ResultSet rs = stm.executeQuery("SELECT count(*) FROM pedidos")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery("SELECT count(*) FROM pedidos")) {
             if (rs.next()) {
                 i = rs.getInt(1);
             }
@@ -172,7 +191,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
     @Override
     public boolean containsKey(Object key) {
         boolean r = false;
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn.prepareStatement("SELECT Id FROM pedidos WHERE Id=?")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                PreparedStatement pstm = conn.prepareStatement("SELECT Id FROM pedidos WHERE Id=?")) {
             pstm.setLong(1, (Long) key);
             try (ResultSet rs = pstm.executeQuery()) {
                 r = rs.next();
@@ -196,7 +216,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
         if (!(key instanceof Long)) {
             return null;
         }
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn.prepareStatement("SELECT * FROM pedidos WHERE Id=?")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                PreparedStatement pstm = conn.prepareStatement("SELECT * FROM pedidos WHERE Id=?")) {
             pstm.setLong(1, (Long) key);
             try (ResultSet rs = pstm.executeQuery()) {
                 if (rs.next()) {
@@ -224,7 +245,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
      * Remove um alimento
      */
     public void removeAlimento(String id) {
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn.prepareStatement("DELETE FROM alimentos WHERE Id=?")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                PreparedStatement pstm = conn.prepareStatement("DELETE FROM alimentos WHERE Id=?")) {
             pstm.setString(1, id);
             pstm.executeUpdate();
         } catch (SQLException e) {
@@ -313,8 +335,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
         Map<String, Alimento> alimentos = new HashMap<>();
         try (PreparedStatement pstm = conn.prepareStatement(
                 "SELECT a.* FROM alimentos a "
-                + "INNER JOIN item_alimentos ia ON a.Id = ia.AlimentoId "
-                + "WHERE ia.ItemId = ?")) {
+                        + "INNER JOIN item_alimentos ia ON a.Id = ia.AlimentoId "
+                        + "WHERE ia.ItemId = ?")) {
             pstm.setString(1, id);
             try (ResultSet rs = pstm.executeQuery()) {
                 while (rs.next()) {
@@ -351,8 +373,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
 
         try (PreparedStatement pstm = conn.prepareStatement(
                 "SELECT p.* FROM produtos p "
-                + "INNER JOIN menu_itens mi ON p.Id = mi.ItemId "
-                + "WHERE mi.MenuId = ?")) {
+                        + "INNER JOIN menu_itens mi ON p.Id = mi.ItemId "
+                        + "WHERE mi.MenuId = ?")) {
             pstm.setString(1, id);
             try (ResultSet rs = pstm.executeQuery()) {
                 while (rs.next()) {
@@ -375,8 +397,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
 
         try (PreparedStatement pstm = conn.prepareStatement(
                 "INSERT INTO produtos VALUES (?, ?, ?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE Nome=VALUES(Nome), Preco=VALUES(Preco), "
-                + "TempoConfecaoEsperado=VALUES(TempoConfecaoEsperado), TipoProduto=VALUES(TipoProduto)")) {
+                        + "ON DUPLICATE KEY UPDATE Nome=VALUES(Nome), Preco=VALUES(Preco), "
+                        + "TempoConfecaoEsperado=VALUES(TempoConfecaoEsperado), TipoProduto=VALUES(TipoProduto)")) {
             pstm.setString(1, produto.getId());
             pstm.setString(2, produto.getNome());
             pstm.setDouble(3, produto.getPreco());
@@ -464,7 +486,7 @@ public class PedidoDAO implements Map<Long, Pedido> {
     private void saveAlimento(Alimento alimento, Connection conn) throws SQLException {
         try (PreparedStatement pstm = conn.prepareStatement(
                 "INSERT INTO alimentos VALUES (?, ?, ?) "
-                + "ON DUPLICATE KEY UPDATE Nome=VALUES(Nome), Quantidade=VALUES(Quantidade)")) {
+                        + "ON DUPLICATE KEY UPDATE Nome=VALUES(Nome), Quantidade=VALUES(Quantidade)")) {
             pstm.setString(1, alimento.getId());
             pstm.setString(2, alimento.getNome());
             pstm.setInt(3, alimento.getQuantidade());
@@ -480,9 +502,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
 
             try (PreparedStatement pstm = conn.prepareStatement(
                     "INSERT INTO pedidos VALUES (?, ?, ?, ?, ?, ?, ?) "
-                    + "ON DUPLICATE KEY UPDATE Estado=VALUES(Estado), Nota=VALUES(Nota), "
-                    + "Preco=VALUES(Preco), TempoConfecaoEsperado=VALUES(TempoConfecaoEsperado), "
-                    + "TempoConfecaoReal=VALUES(TempoConfecaoReal), Tipo=VALUES(Tipo)")) {
+                            + "ON DUPLICATE KEY UPDATE Estado=VALUES(Estado), Nota=VALUES(Nota), "
+                            + "Preco=VALUES(Preco), TempoConfecaoEsperado=VALUES(TempoConfecaoEsperado), "
+                            + "TempoConfecaoReal=VALUES(TempoConfecaoReal), Tipo=VALUES(Tipo)")) {
                 pstm.setLong(1, p.getIdCounter());
                 pstm.setString(2, p.getEstado().toString());
                 pstm.setString(3, p.getNota());
@@ -577,7 +599,8 @@ public class PedidoDAO implements Map<Long, Pedido> {
     @Override
     public Pedido remove(Object key) {
         Pedido p = this.get(key);
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn.prepareStatement("DELETE FROM pedidos WHERE Id=?")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                PreparedStatement pstm = conn.prepareStatement("DELETE FROM pedidos WHERE Id=?")) {
             pstm.setLong(1, (Long) key);
             pstm.executeUpdate();
         } catch (Exception e) {
@@ -626,7 +649,9 @@ public class PedidoDAO implements Map<Long, Pedido> {
     @Override
     public Collection<Pedido> values() {
         Collection<Pedido> res = new HashSet<>();
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement(); ResultSet rs = stm.executeQuery("SELECT Id FROM pedidos")) {
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery("SELECT Id FROM pedidos")) {
             while (rs.next()) {
                 Long id = rs.getLong("Id");
                 Pedido p = this.get(id);
