@@ -31,6 +31,8 @@ public interface InterRestauranteL {
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException;
 
+    public void entregarPedido(long idPedido);
+
     public void encerrarPedido(long idPedido, String postoId);
 
     public void removerPedidoFila(long idPedido, List<Long> filaPedidos);
@@ -44,6 +46,8 @@ public interface InterRestauranteL {
     public List<Pedido> getPedidosPorPagar();
 
     public List<Pedido> getPedidosEmPreparacao();
+
+    public List<Pedido> getPedidosConcluidos();
 
     public List<Long> getFilaPedidos();
 

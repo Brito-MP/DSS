@@ -82,7 +82,8 @@ public class App {
     private void menuFuncionario() {
         NewMenu menu = new NewMenu(new String[] {
                 "Caixa",
-                "Cozinha"
+                "Cozinha",
+                "Embalador/Empratador"
         });
         menu.setHandler(1, () -> {
             caixa();
@@ -90,12 +91,10 @@ public class App {
         menu.setHandler(2, () -> {
             cozinha();
         });
-        /*
-         * menu.setHandler(3, () -> {
-         * embalador_empratador();
-         * });
-         */
-        menu.runOnce();
+        menu.setHandler(3, () -> {
+            embaladorEmpratador();
+        });
+        menu.run();
     }
 
     private void caixa() {
@@ -120,7 +119,7 @@ public class App {
             });
         }
 
-        menu.runOnce();
+        menu.run();
     }
 
     private void cozinha() {
@@ -137,7 +136,49 @@ public class App {
         menu.setHandler(3, () -> atrasarPedidoEAtualizarFila());
         menu.setHandler(4, () -> encerrarPedido());
 
-        menu.runOnce();
+        menu.run();
+    }
+
+    private void embaladorEmpratador() {
+        boolean continuar = true;
+
+        while (continuar) {
+            List<Pedido> concluidos = model.getPedidosConcluidos();
+
+            if (concluidos.isEmpty()) {
+                System.out.println("Nenhum pedido concluído para entregar.\n");
+                return;
+            }
+
+            displayPedidosConcluidos(concluidos);
+
+            String[] opcoes = new String[concluidos.size()];
+            for (int i = 0; i < concluidos.size(); i++) {
+                Pedido pedido = concluidos.get(i);
+                String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
+                opcoes[i] = "Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
+                        + String.format("%.2f", pedido.getPreco());
+            }
+
+            final long[] entregue = { -1 };
+            NewMenu menu = new NewMenu(opcoes);
+
+            for (int i = 0; i < concluidos.size(); i++) {
+                final int idx = i;
+                menu.setHandler(i + 1, () -> {
+                    long id = concluidos.get(idx).getIdCounter();
+                    model.entregarPedido(id);
+                    entregue[0] = id;
+                    System.out.println("✓ Pedido " + id + " marcado como entregue.");
+                });
+            }
+
+            menu.runOnce();
+
+            if (entregue[0] < 0) {
+                continuar = false;
+            }
+        }
     }
 
     private void menuCliente() {
@@ -146,7 +187,8 @@ public class App {
         while (!pagamentoConcluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
                     "Take Away",
-                    "No Restaurante"
+                    "No Restaurante",
+                    "Painel de pedidos"
             });
             menu.setHandler(1, () -> {
                 boolean pagou = takeAway();
@@ -160,6 +202,7 @@ public class App {
                     pagamentoConcluido[0] = true;
                 }
             });
+            menu.setHandler(3, () -> displayPainelPedidos());
 
             menu.runOnce();
         }
@@ -457,6 +500,60 @@ public class App {
         System.out.println("Nota: " + nota + "\n");
     }
 
+    private void displayPedidosConcluidos() {
+        displayPedidosConcluidos(model.getPedidosConcluidos());
+    }
+
+    private void displayPedidosConcluidos(List<Pedido> pedidos) {
+        System.out.println("\n===== PEDIDOS CONCLUÍDOS =====");
+        if (pedidos.isEmpty()) {
+            System.out.println("Nenhum pedido concluído!\n");
+            return;
+        }
+
+        for (Pedido pedido : pedidos) {
+            String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
+            String notaPedido = pedido.getNota() == null || pedido.getNota().isEmpty() ? "-" : pedido.getNota();
+
+            System.out.println("Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
+                    + String.format("%.2f", pedido.getPreco()));
+            System.out.println("  Nota: " + notaPedido);
+            System.out.println("  Itens:");
+
+            List<Produto> produtos = pedido.getProdutos();
+            for (int i = 0; i < produtos.size(); i++) {
+                System.out.println("    " + (i + 1) + ". " + produtos.get(i).getNome());
+            }
+            System.out.println();
+        }
+    }
+
+    private void displayPainelPedidos() {
+        List<Pedido> emPreparacao = model.getPedidosEmPreparacao();
+        List<Pedido> concluidos = model.getPedidosConcluidos();
+
+        System.out.println("\n===== PAINEL DE PEDIDOS =====");
+
+        System.out.println("Em preparação:");
+        if (emPreparacao.isEmpty()) {
+            System.out.println("  (nenhum)");
+        } else {
+            for (Pedido pedido : emPreparacao) {
+                System.out.println("  Pedido #" + pedido.getIdCounter());
+            }
+        }
+
+        System.out.println("\nProntos para entrega/recolha:");
+        if (concluidos.isEmpty()) {
+            System.out.println("  (nenhum)");
+        } else {
+            for (Pedido pedido : concluidos) {
+                System.out.println("  Pedido #" + pedido.getIdCounter());
+            }
+        }
+        System.out.println();
+    }
+
     private long escolherPedidoEmPreparacao() {
         List<Pedido> pedidos = model.getPedidosEmPreparacao();
 
@@ -524,6 +621,26 @@ public class App {
 
         model.requisitarIngredientes(idPedido, postoId);
         System.out.println("✓ Ingredientes requisitados para o pedido " + idPedido + " no posto " + postoId + ".");
+
+        System.out.print("Tempo de atraso (ex: 2.5, Enter para nenhum): ");
+        String atrasoInput = scanner.nextLine().trim();
+        if (!atrasoInput.isEmpty()) {
+            try {
+                double atraso = Double.parseDouble(atrasoInput);
+                model.atrasarPedido(idPedido, atraso);
+
+                List<Long> fila = model.getFilaPedidos();
+                if (fila == null) {
+                    System.out.println("Fila de pedidos indisponível.");
+                    return;
+                }
+
+                model.atualizaFilaPedidos(idPedido, fila);
+                System.out.println("✓ Atraso aplicado e fila atualizada: " + fila);
+            } catch (NumberFormatException e) {
+                System.out.println("Valor de atraso inválido, ignorando atraso.");
+            }
+        }
     }
 
     private void atrasarPedidoEAtualizarFila() {
