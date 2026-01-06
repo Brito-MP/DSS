@@ -172,6 +172,7 @@ public class App {
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
+                    "Construir Menu",
                     "Menus",
                     "Itens",
                     "Pedido",
@@ -179,13 +180,16 @@ public class App {
                     "Registar Pedido"
             });
 
-            menu.setHandler(1, () -> displayMenus());
-            menu.setHandler(2, () -> displayItens());
-            menu.setHandler(3, () -> displayPedido());
-            menu.setHandler(4, () -> {
+            menu.setHandler(1, () -> {
+                System.out.println("Construir Menu - Em construção");
+            });
+            menu.setHandler(2, () -> displayMenus());
+            menu.setHandler(3, () -> displayItens());
+            menu.setHandler(4, () -> displayPedido());
+            menu.setHandler(5, () -> {
                 nota = adicionaNota();
             });
-            menu.setHandler(5, () -> {
+            menu.setHandler(6, () -> {
                 idPedido = model.registaPedido(produtos_escolhidos, nota, false);
                 boolean pagamento = menuTrocasItem(idPedido);
                 if (pagamento) {
@@ -205,20 +209,22 @@ public class App {
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
+                    "Construir Menu",
                     "Menus",
                     "Itens",
                     "Pedido",
                     "Adicionar nota",
                     "Registar Pedido"
             });
-
-            menu.setHandler(1, () -> displayMenus());
-            menu.setHandler(2, () -> displayItens());
-            menu.setHandler(3, () -> displayPedido());
-            menu.setHandler(4, () -> {
+            
+            menu.setHandler(1,() -> System.out.println("Construir Menu - Em construção"));
+            menu.setHandler(2, () -> displayMenus());
+            menu.setHandler(3, () -> displayItens());
+            menu.setHandler(4, () -> displayPedido());
+            menu.setHandler(5, () -> {
                 nota = adicionaNota();
             });
-            menu.setHandler(5, () -> {
+            menu.setHandler(6, () -> {
                 idPedido = model.registaPedido(produtos_escolhidos, nota, true);
                 boolean pagamento = menuTrocasItem(idPedido);
                 if (pagamento) {
@@ -226,6 +232,7 @@ public class App {
                     concluido[0] = true;
                 }
             });
+
 
             menu.runOnce();
         }
