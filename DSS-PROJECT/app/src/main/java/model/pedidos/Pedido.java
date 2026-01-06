@@ -147,7 +147,7 @@ public class Pedido {
         throw new PedidoException("Produto " + idProduto + " não encontrado neste pedido");
     }
 
-    public void pedidoEntregue() {
+    public void setPedidoEntregue() {
         this.estado = Estado.Entregue;
     }
 

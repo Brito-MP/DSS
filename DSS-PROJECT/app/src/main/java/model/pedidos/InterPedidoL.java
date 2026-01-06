@@ -23,9 +23,13 @@ public interface InterPedidoL {
     List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException;
 
-    void atualizaEstadoPedido(Long idPedido);
+    void entregarPedido(long idPedido);
+
+    //void atualizaEstadoPedido(Long idPedido);
 
     List<Pedido> getPedidosPorPagar();
 
     List<Pedido> getPedidosEmPreparacao();
+
+    List<Pedido> getPedidosConcluidos();
 }

@@ -7,6 +7,7 @@ import java.util.Map;
 import data.PedidoDAO;
 import data.ProdutoDAO;
 import model.gestao.Alimento;
+import model.pedidos.Estado;
 
 public class PedidosFacade implements InterPedidoL {
 
@@ -141,18 +142,33 @@ public class PedidosFacade implements InterPedidoL {
     }
 
     @Override
+    public void entregarPedido(long idPedido) {
+        Pedido pedido = this.pedidos.get(idPedido);
+
+        if (pedido == null) {
+            System.out.println("✗ Pedido " + idPedido + " não encontrado para entrega.");
+            return;
+        }
+
+        pedido.setEstado(Estado.Entregue);
+        this.pedidos.put(idPedido, pedido);
+    }
+    
+    /*
+    @Override
     public void atualizaEstadoPedido(Long idPedido) {
         Pedido pedido = pedidos.get(idPedido);
-
+        
         if (pedido != null) {
             pedido.pedidoEntregue();
             pedidos.put(idPedido, pedido);
-
+            
             System.out.println("Pedido " + idPedido + " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); // apagar no futuro???
         } else {
             System.out.println("Pedido com ID " + idPedido + " não encontrado.");// apagar no futuro 
         }
     }
+    */
 
     @Override
     public List<Pedido> getPedidosPorPagar() {
@@ -167,6 +183,16 @@ public class PedidosFacade implements InterPedidoL {
     @Override
     public List<Pedido> getPedidosEmPreparacao() {
         List<Pedido> pedidos = PedidoDAO.getInstance().getPedidosPorEstado(Estado.EmPreparacao);
+        List<Pedido> clones = new ArrayList<>();
+        for (Pedido p : pedidos) {
+            clones.add(p.clone());
+        }
+        return clones;
+    }
+
+    @Override
+    public List<Pedido> getPedidosConcluidos() {
+        List<Pedido> pedidos = PedidoDAO.getInstance().getPedidosPorEstado(Estado.Concluido);
         List<Pedido> clones = new ArrayList<>();
         for (Pedido p : pedidos) {
             clones.add(p.clone());

@@ -93,6 +93,11 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public void entregarPedido(long idPedido) {
+        this.pedidos.entregarPedido(idPedido);
+    }
+
+    @Override
     public void encerrarPedido(long idPedido, String postoId) {
         this.preparacoes.encerrarPedido(idPedido, postoId);
     }
@@ -125,6 +130,11 @@ public class RestauranteFacade implements InterRestauranteL {
     @Override
     public List<Pedido> getPedidosEmPreparacao() {
         return this.pedidos.getPedidosEmPreparacao();
+    }
+
+    @Override
+    public List<Pedido> getPedidosConcluidos() {
+        return this.pedidos.getPedidosConcluidos();
     }
 
     @Override
