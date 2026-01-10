@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-import data.PedidoDAO;
 import model.InterRestauranteL;
 import model.RestauranteFacade;
 import model.gestao.Alimento;
@@ -13,7 +12,7 @@ import model.pedidos.Item;
 import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
-import data.PedidoDAO;
+import model.preparacoes.TipoPosto;
 
 public class App {
 
@@ -43,26 +42,157 @@ public class App {
     private void run() {
         NewMenu menu = new NewMenu(new String[] {
                 "TestaDAO",
-                "COO",
                 "Funcionario",
-                "Cliente"
+                "Cliente",
+                "Sair"
         });
 
         menu.setHandler(1, this::testaDAO);
-        menu.setHandler(2, this::menuCOO);
-        menu.setHandler(3, this::menuFuncionario);
-        menu.setHandler(4, this::menuCliente);
+        menu.setHandler(2, this::menuFuncionario);
+        menu.setHandler(3, this::menuCliente);
+        menu.setHandler(4, () -> {
+            System.out.println("Até já!");
+            System.exit(0);
+        });
 
         menu.run();
         scanner.close();
         System.exit(0);
     }
 
-    // ========== MENUS DE UTILIZADOR ==========
-    private void menuCOO() {
+    private long autenticaFuncionario() {
+        int tentativas = 3;
+
+        while (tentativas-- > 0) {
+            System.out.print("ID do funcionário (número de trabalhador): ");
+            String idInput = scanner.nextLine().trim();
+
+            System.out.print("Password: ");
+            String password = scanner.nextLine().trim();
+
+            long id;
+            try {
+                id = Long.parseLong(idInput);
+            } catch (NumberFormatException e) {
+                System.out.println("✗ ID inválido. Use o número de trabalhador.");
+                continue;
+            }
+
+            if (model.autenticaFuncionario(id, password)) {
+                System.out.println("✓ Login efetuado. Bem-vindo, " + id + ".");
+                return id;
+            }
+
+            System.out.println("✗ Credenciais inválidas. Tentativas restantes: " + tentativas);
+        }
+
+        System.out.println("✗ Não foi possível autenticar. A sair do menu de funcionário.");
+        return -1;
+    }
+
+    private String selecionaPostoSeNecessario(long funcionarioId) {
+        while (true) {
+            List<String> livres = model.getPostosLivres();
+            if (livres.isEmpty()) {
+                System.out.println("✗ Não há postos livres no momento.");
+                return null;
+            }
+
+            String[] opcoes = new String[livres.size()];
+            for (int i = 0; i < livres.size(); i++) {
+                String id = livres.get(i);
+                TipoPosto tipo = model.getTipoPosto(id);
+                opcoes[i] = id + " (" + tipo + ")";
+            }
+
+            final int[] escolhidoIdx = { -1 };
+            NewMenu menu = new NewMenu(opcoes);
+            for (int i = 0; i < livres.size(); i++) {
+                final int idx = i;
+                menu.setHandler(i + 1, () -> escolhidoIdx[0] = idx);
+            }
+
+            menu.runOnce();
+
+            if (escolhidoIdx[0] < 0) {
+                System.out.println("A sair do menu de funcionário.");
+                return null;
+            }
+
+            String postoId = livres.get(escolhidoIdx[0]);
+            if (model.ocuparPosto(postoId, funcionarioId)) {
+                System.out.println("✓ Posto selecionado: " + postoId + " (" + model.getTipoPosto(postoId) + ")");
+                return postoId;
+            }
+
+            System.out.println("✗ Não foi possível ocupar esse posto. Atualizando lista...");
+        }
+    }
+
+    // ========== MENUS DE PEDIDO ==========
+    private void menuFuncionario() {
+        long funcionarioId = autenticaFuncionario();
+        if (funcionarioId < 0) {
+            return;
+        }
+
+        NewMenu menu = new NewMenu(new String[] {
+                "Iniciar sessão de trabalho",
+                "Painel de pedidos",
+                "Libertar posto"
+        });
+
+        menu.setHandler(1, () -> {
+            if (model.funcionarioEAdmin(funcionarioId)) {
+                menuAdmin();
+                return;
+            }
+
+            String postoId = selecionaPostoSeNecessario(funcionarioId);
+            if (postoId == null) {
+                return;
+            }
+            TipoPosto tipo = model.getTipoPosto(postoId);
+            switch (tipo) {
+                case CAIXA:
+                    menuCaixa();
+                    break;
+                case COZINHA:
+                    menuCozinha();
+                    break;
+                case EMBALADOR_EMPRATADOR:
+                    menuEmbaladorEmpratador();
+                    break;
+                default:
+                    break;
+            }
+        });
+        menu.setHandler(2, this::displayPainelPedidos);
+        menu.setHandler(3, () -> model.libertarPostoDeFuncionario(funcionarioId));
+
+        menu.run();
+    }
+
+    private void displayPostosLivres() {
+        List<String> livres = model.getPostosLivres();
+        System.out.println("\nPostos livres:");
+        if (livres.isEmpty()) {
+            System.out.println("  (nenhum)\n");
+            return;
+        }
+        for (String id : livres) {
+            TipoPosto tipo = model.getTipoPosto(id);
+            System.out.println("  - " + id + " (" + tipo + ")");
+        }
+        System.out.println();
+    }
+
+    private void menuAdmin() {
         NewMenu menu = new NewMenu(new String[] {
                 "Ver Tempo Médio de Confecção",
-                "Ver Stock de Alimentos"
+                "Ver Stock de Alimentos",
+                "Ver Postos Livres",
+                "Registar Funcionário"
         });
 
         menu.setHandler(1, () -> {
@@ -76,31 +206,48 @@ public class App {
                 System.out.println("Alimento ID: " + entry.getKey() + " | Quantidade: " + entry.getValue());
             }
         });
+        
+        menu.setHandler(3, () -> displayPostosLivres());
+        menu.setHandler(4, () -> registarFuncionario());
 
         menu.run();
     }
 
-    // ========== MENUS DE PEDIDO ==========
-    private void menuFuncionario() {
-        NewMenu menu = new NewMenu(new String[] {
-                "Caixa",
-                "Cozinha",
-                "Embalador/Empratador"
-        });
-        menu.setHandler(1, () -> {
-            caixa();
-        });
-        menu.setHandler(2, () -> {
-            cozinha();
-        });
-        menu.setHandler(3, () -> {
-            embaladorEmpratador();
-        });
-        menu.run();
+    private void registarFuncionario() {
+        try {
+            System.out.print("ID (número de trabalhador): ");
+            long id = Long.parseLong(scanner.nextLine().trim());
+
+            System.out.print("Nome: ");
+            String nome = scanner.nextLine().trim();
+
+            System.out.print("Password: ");
+            String password = scanner.nextLine().trim();
+
+            System.out.print("Perfil (1-Admin, 2-Normal): ");
+            String perfilInput = scanner.nextLine().trim();
+            boolean admin = "1".equals(perfilInput);
+
+            model.registaFuncionario(id, nome, password, admin);
+            System.out.println("✓ Funcionário registado com sucesso.");
+        } catch (NumberFormatException e) {
+            System.out.println("✗ ID inválido, registo cancelado.");
+        }
     }
 
-    private void caixa() {
+    private void menuCaixa() {
         List<Pedido> pendentes = model.getPedidosPorPagar();
+
+        // Mostrar detalhes completos para o caixa
+        if (pendentes.isEmpty()) {
+            System.out.println("Nenhum pedido por pagar.\n");
+        }
+
+        System.out.println("\n===== DETALHE PEDIDOS POR PAGAR =====");
+        for (Pedido pedido : pendentes) {
+            mostrarPedidoDetalhado(pedido);
+            System.out.println();
+        }
         
         String[] opcoes = new String[pendentes.size()];
         for (int i = 0; i < pendentes.size(); i++) {
@@ -124,7 +271,7 @@ public class App {
         menu.run();
     }
 
-    private void cozinha() {
+    private void menuCozinha() {
 
         NewMenu menu = new NewMenu(new String[] {
                 "Pedidos em preparação",
@@ -141,25 +288,19 @@ public class App {
         menu.run();
     }
 
-    private void embaladorEmpratador() {
-        boolean continuar = true;
-
-        while (continuar) {
-            List<Pedido> concluidos = model.getPedidosConcluidos();
+    private void menuEmbaladorEmpratador() {
+        while (true) {
+            List<Long> concluidos = model.getPedidosConcluidosIds();
 
             if (concluidos.isEmpty()) {
                 System.out.println("Nenhum pedido concluído para entregar.\n");
                 return;
             }
 
-            displayPedidosConcluidos(concluidos);
-
             String[] opcoes = new String[concluidos.size()];
             for (int i = 0; i < concluidos.size(); i++) {
-                Pedido pedido = concluidos.get(i);
-                String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
-                opcoes[i] = "Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
-                        + String.format("%.2f", pedido.getPreco());
+                Long id = concluidos.get(i);
+                opcoes[i] = "Pedido #" + id;
             }
 
             final long[] entregue = { -1 };
@@ -168,17 +309,18 @@ public class App {
             for (int i = 0; i < concluidos.size(); i++) {
                 final int idx = i;
                 menu.setHandler(i + 1, () -> {
-                    long id = concluidos.get(idx).getIdCounter();
-                    model.entregarPedido(id);
-                    entregue[0] = id;
-                    System.out.println("✓ Pedido " + id + " marcado como entregue.");
+                    long idPedido = concluidos.get(idx);
+                    model.entregarPedido(idPedido);
+                    entregue[0] = idPedido;
+                    System.out.println("✓ Pedido " + idPedido + " marcado como entregue.");
                 });
             }
 
             menu.runOnce();
 
             if (entregue[0] < 0) {
-                continuar = false;
+                System.out.println("A sair do menu de embalador/empratador.");
+                return;
             }
         }
     }
@@ -503,36 +645,25 @@ public class App {
     }
 
     private void displayPedidosConcluidos() {
-        displayPedidosConcluidos(model.getPedidosConcluidos());
+        displayPedidosConcluidos(model.getPedidosConcluidosIds());
     }
 
-    private void displayPedidosConcluidos(List<Pedido> pedidos) {
+    private void displayPedidosConcluidos(List<Long> pedidos) {
         System.out.println("\n===== PEDIDOS CONCLUÍDOS =====");
         if (pedidos.isEmpty()) {
             System.out.println("Nenhum pedido concluído!\n");
             return;
         }
 
-        for (Pedido pedido : pedidos) {
-            String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
-            String notaPedido = pedido.getNota() == null || pedido.getNota().isEmpty() ? "-" : pedido.getNota();
-
-            System.out.println("Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
-                    + String.format("%.2f", pedido.getPreco()));
-            System.out.println("  Nota: " + notaPedido);
-            System.out.println("  Itens:");
-
-            List<Produto> produtos = pedido.getProdutos();
-            for (int i = 0; i < produtos.size(); i++) {
-                System.out.println("    " + (i + 1) + ". " + produtos.get(i).getNome());
-            }
-            System.out.println();
+        for (Long pedidoId : pedidos) {
+            System.out.println("Pedido #" + pedidoId);
         }
+        System.out.println();
     }
 
     private void displayPainelPedidos() {
         List<Pedido> emPreparacao = model.getPedidosEmPreparacao();
-        List<Pedido> concluidos = model.getPedidosConcluidos();
+        List<Long> concluidos = model.getPedidosConcluidosIds();
 
         System.out.println("\n===== PAINEL DE PEDIDOS =====");
 
@@ -549,8 +680,8 @@ public class App {
         if (concluidos.isEmpty()) {
             System.out.println("  (nenhum)");
         } else {
-            for (Pedido pedido : concluidos) {
-                System.out.println("  Pedido #" + pedido.getIdCounter());
+            for (Long pedidoId : concluidos) {
+                System.out.println("  Pedido #" + pedidoId);
             }
         }
         System.out.println();
@@ -592,19 +723,23 @@ public class App {
         }
 
         for (Pedido pedido : pedidos) {
-            String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
-            String notaPedido = pedido.getNota() == null || pedido.getNota().isEmpty() ? "-" : pedido.getNota();
-
-            System.out.println("Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
-                    + String.format("%.2f", pedido.getPreco()));
-            System.out.println("  Nota: " + notaPedido);
-            System.out.println("  Itens:");
-
-            List<Produto> produtos = pedido.getProdutos();
-            for (int i = 0; i < produtos.size(); i++) {
-                System.out.println("    " + (i + 1) + ". " + produtos.get(i).getNome());
-            }
+            mostrarPedidoDetalhado(pedido);
             System.out.println();
+        }
+    }
+
+    private void mostrarPedidoDetalhado(Pedido pedido) {
+        String tipo = pedido.getTipo() ? "Restaurante" : "Take Away";
+        String notaPedido = pedido.getNota() == null || pedido.getNota().isEmpty() ? "-" : pedido.getNota();
+
+        System.out.println("Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
+                + String.format("%.2f", pedido.getPreco()));
+        System.out.println("  Nota: " + notaPedido);
+        System.out.println("  Itens:");
+
+        List<Produto> produtos = pedido.getProdutos();
+        for (int i = 0; i < produtos.size(); i++) {
+            System.out.println("    " + (i + 1) + ". " + produtos.get(i).getNome());
         }
     }
 

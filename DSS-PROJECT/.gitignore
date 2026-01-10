@@ -11,3 +11,5 @@ app/src/main/java/data/DAOconfig.java
 
 # Visual Paradigm class diagram
 DiagramaClassesRestaurante.vpp
+# Ignore compiled binaries
+app/bin/
