@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import data.PedidoDAO;
 import model.InterRestauranteL;
 import model.RestauranteFacade;
 import model.gestao.Alimento;
@@ -12,6 +13,7 @@ import model.pedidos.Item;
 import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
+import data.PedidoDAO;
 
 public class App {
 
@@ -26,7 +28,7 @@ public class App {
 
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
-        // PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
+        //PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
 
         App app = new App();
         app.run();
