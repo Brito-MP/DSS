@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import data.PedidoDAO;
 import model.InterRestauranteL;
 import model.RestauranteFacade;
 import model.gestao.Alimento;
@@ -12,6 +13,7 @@ import model.pedidos.Item;
 import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
+import data.PedidoDAO;
 
 public class App {
 
@@ -26,7 +28,7 @@ public class App {
 
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
-        // PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
+        //PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
 
         App app = new App();
         app.run();
@@ -215,6 +217,7 @@ public class App {
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
+                    "Construir Menu",
                     "Menus",
                     "Itens",
                     "Pedido",
@@ -222,13 +225,16 @@ public class App {
                     "Registar Pedido"
             });
 
-            menu.setHandler(1, () -> displayMenus());
-            menu.setHandler(2, () -> displayItens());
-            menu.setHandler(3, () -> displayPedido());
-            menu.setHandler(4, () -> {
+            menu.setHandler(1, () -> {
+                System.out.println("Construir Menu - Em construção");
+            });
+            menu.setHandler(2, () -> displayMenus());
+            menu.setHandler(3, () -> displayItens());
+            menu.setHandler(4, () -> displayPedido());
+            menu.setHandler(5, () -> {
                 nota = adicionaNota();
             });
-            menu.setHandler(5, () -> {
+            menu.setHandler(6, () -> {
                 idPedido = model.registaPedido(produtos_escolhidos, nota, false);
                 boolean pagamento = menuTrocasItem(idPedido);
                 if (pagamento) {
@@ -248,20 +254,22 @@ public class App {
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
+                    "Construir Menu",
                     "Menus",
                     "Itens",
                     "Pedido",
                     "Adicionar nota",
                     "Registar Pedido"
             });
-
-            menu.setHandler(1, () -> displayMenus());
-            menu.setHandler(2, () -> displayItens());
-            menu.setHandler(3, () -> displayPedido());
-            menu.setHandler(4, () -> {
+            
+            menu.setHandler(1,() -> System.out.println("Construir Menu - Em construção"));
+            menu.setHandler(2, () -> displayMenus());
+            menu.setHandler(3, () -> displayItens());
+            menu.setHandler(4, () -> displayPedido());
+            menu.setHandler(5, () -> {
                 nota = adicionaNota();
             });
-            menu.setHandler(5, () -> {
+            menu.setHandler(6, () -> {
                 idPedido = model.registaPedido(produtos_escolhidos, nota, true);
                 boolean pagamento = menuTrocasItem(idPedido);
                 if (pagamento) {
@@ -269,6 +277,7 @@ public class App {
                     concluido[0] = true;
                 }
             });
+
 
             menu.runOnce();
         }
