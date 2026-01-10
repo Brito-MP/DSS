@@ -18,24 +18,26 @@ import model.pedidos.Produto;
 public class PreparacoesFacade implements InterPreparacoesL {
 
     private List<Long> filaPedidos;
-    private final Map<String, Posto> postos; // idPosto -> Posto
+    private Map<String, Posto> postos; // idPosto -> Posto
     private final Map<Long, Funcionario> funcionarios; // idFuncionario-> Funcionario
+    private Map<Long, Pedido> pedidos; // idPedido -> Pedido
+    private Map<String, Alimento> alimentos; // idAlimento -> Alimento
 
     // ====================================================================================================
     // CONSTRUTORES
     // ====================================================================================================
     public PreparacoesFacade() {
         this.postos = PostoDAO.getInstance();
+        this.pedidos = PedidoDAO.getInstance();
+        this.alimentos = AlimentoDAO.getInstance();
         this.filaPedidos = new ArrayList<>();
         this.funcionarios = FuncionarioDAO.getInstance();
     }
 
     @Override
     public void encerrarPedido(long idPedido, String postoId) {
-        PedidoDAO dao = PedidoDAO.getInstance();
-        Pedido pedido = dao.get(idPedido);
-        PostoDAO postoDAO = PostoDAO.getInstance();
-        Posto posto = postoDAO.get(postoId);
+        Pedido pedido = this.pedidos.get(idPedido);
+        Posto posto = this.postos.get(postoId);
 
         if (pedido == null || posto == null) {
             return;
@@ -52,16 +54,15 @@ public class PreparacoesFacade implements InterPreparacoesL {
             }
         }
 
-        postoDAO.put(postoId, posto);
+        this.postos.put(postoId, posto);
         pedido.setEstado(Estado.Concluido);
         removerPedidoFila(idPedido, filaPedidos);
-        dao.put(idPedido, pedido);
+        this.pedidos.put(idPedido, pedido);
     }
 
     @Override
     public void removerPedidoFila(long idPedido, List<Long> filaPedidos) {
-        PedidoDAO dao = PedidoDAO.getInstance();
-        Pedido pedido = dao.get(idPedido);
+        Pedido pedido = this.pedidos.get(idPedido);
 
         if (pedido == null) {
             return;
@@ -84,41 +85,37 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
     @Override
     public void requisitarIngredientes(long idPedido, String idPosto) {
-        PedidoDAO pedDao = PedidoDAO.getInstance();
-        Pedido pedido = pedDao.get(idPedido);
+        Pedido pedido = this.pedidos.get(idPedido);
 
         if (pedido == null) {
             return;
         }
 
-        PostoDAO postDao = PostoDAO.getInstance();
-        Posto posto = postDao.get(idPosto);
+        Posto posto = this.postos.get(idPosto);
 
         if (posto == null) {
             return;
         }
 
-        AlimentoDAO alimDao = AlimentoDAO.getInstance();
-
         boolean atualizouPosto = false;
 
         for (Produto produto : pedido.getProdutos()) {
             if (produto instanceof Item) {
-                atualizouPosto |= requisitarParaItem((Item) produto, posto, alimDao);
+                atualizouPosto |= requisitarParaItem((Item) produto, posto);
             } else if (produto instanceof Menu) {
                 for (Item item : ((Menu) produto).getItens()) {
-                    atualizouPosto |= requisitarParaItem(item, posto, alimDao);
+                    atualizouPosto |= requisitarParaItem(item, posto);
                 }
             }
         }
 
         if (atualizouPosto) {
-            postDao.put(idPosto, posto);
+            this.postos.put(idPosto, posto);
         }
 
     }
 
-    private boolean requisitarParaItem(Item item, Posto posto, AlimentoDAO alimDao) {
+    private boolean requisitarParaItem(Item item, Posto posto) {
         boolean houveAtualizacao = false;
 
         for (Alimento alimento : item.getAlimentos().values()) {
@@ -129,14 +126,15 @@ public class PreparacoesFacade implements InterPreparacoesL {
                 continue;
             }
 
-            Alimento stockGlobal = alimDao.get(alimento.getId());
+            Alimento stockGlobal = this.alimentos.get(alimento.getId());
             int disponivel = stockGlobal != null ? stockGlobal.getQuantidade() : 0;
 
             int aTrazer = Math.min(20, disponivel);
 
             if (aTrazer > 0) {
                 posto.getQuantidadeAlimento().put(alimento.getId(), emPosto + aTrazer);
-                alimDao.put(alimento.getId(), new Alimento(disponivel - aTrazer, alimento.getId(), alimento.getNome()));
+                this.alimentos.put(alimento.getId(),
+                        new Alimento(disponivel - aTrazer, alimento.getId(), alimento.getNome()));
                 houveAtualizacao = true;
             }
         }
@@ -156,8 +154,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
     @Override
     public void atrasarPedido(long idPedido, double tempoAtraso) {
-        PedidoDAO dao = PedidoDAO.getInstance();
-        Pedido pedido = dao.get(idPedido);
+        Pedido pedido = this.pedidos.get(idPedido);
 
         if (pedido == null) {
             return;
@@ -165,13 +162,12 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
         double novoTempo = pedido.getTempoConfecaoReal() + tempoAtraso;
         pedido.setTempoConfecaoReal(novoTempo);
-        dao.put(idPedido, pedido);
+        this.pedidos.put(idPedido, pedido);
     }
 
     @Override
     public void atualizaFilaPedidos(long idPedido, List<Long> filaPedidos) {
-        PedidoDAO dao = PedidoDAO.getInstance();
-        Pedido pedidoAtrasado = dao.get(idPedido);
+        Pedido pedidoAtrasado = this.pedidos.get(idPedido);
 
         if (pedidoAtrasado == null || filaPedidos == null) {
             return;
@@ -188,7 +184,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
         double tempoOcupado = 0;
 
         for (Long outroId : filaPedidos) {
-            Pedido outroPedido = dao.get(outroId);
+            Pedido outroPedido = this.pedidos.get(outroId);
             double tempoPedido = outroPedido != null ? outroPedido.getTempoConfecaoEsperado() : 0;
 
             if (tempoOcupado + tempoPedido <= tempoAtraso) {

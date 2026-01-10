@@ -12,7 +12,6 @@ public class PedidosFacade implements InterPedidoL {
 
     private Map<String, Produto> produtos;
     private Map<Long, Pedido> pedidos;
-    // private Map<Long, Pedido> pedidos;
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -32,15 +31,14 @@ public class PedidosFacade implements InterPedidoL {
     @Override
     public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo) {
         List<Produto> produtosSelecionados = new ArrayList<>();
-        ProdutoDAO dao = ProdutoDAO.getInstance();
 
         double precoTotal = 0;
         double tempoTotal = 0;
 
         for (String codigo : codigoProdutos) {
             try {
-                // Buscar o produto da BD usando ProdutoDAO
-                Produto produto = dao.get(codigo);
+                // Buscar o produto da BD usando this.produtos
+                Produto produto = this.produtos.get(codigo);
                 if (produto != null) {
                     produtosSelecionados.add(produto);
                     // Calcular preço e tempo totais
@@ -152,22 +150,25 @@ public class PedidosFacade implements InterPedidoL {
         pedido.setEstado(Estado.Entregue);
         this.pedidos.put(idPedido, pedido);
     }
-    
+
     /*
-    @Override
-    public void atualizaEstadoPedido(Long idPedido) {
-        Pedido pedido = pedidos.get(idPedido);
-        
-        if (pedido != null) {
-            pedido.pedidoEntregue();
-            pedidos.put(idPedido, pedido);
-            
-            System.out.println("Pedido " + idPedido + " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); // apagar no futuro???
-        } else {
-            System.out.println("Pedido com ID " + idPedido + " não encontrado.");// apagar no futuro 
-        }
-    }
-    */
+     * @Override
+     * public void atualizaEstadoPedido(Long idPedido) {
+     * Pedido pedido = pedidos.get(idPedido);
+     * 
+     * if (pedido != null) {
+     * pedido.pedidoEntregue();
+     * pedidos.put(idPedido, pedido);
+     * 
+     * System.out.println("Pedido " + idPedido +
+     * " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); //
+     * apagar no futuro???
+     * } else {
+     * System.out.println("Pedido com ID " + idPedido + " não encontrado.");//
+     * apagar no futuro
+     * }
+     * }
+     */
 
     @Override
     public List<Pedido> getPedidosPorPagar() {
