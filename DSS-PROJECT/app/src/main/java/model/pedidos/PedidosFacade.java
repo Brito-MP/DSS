@@ -11,9 +11,8 @@ import model.pedidos.Estado;
 
 public class PedidosFacade implements InterPedidoL {
 
-    private ProdutoDAO produtos;
-    private PedidoDAO pedidos;
-    // private Map<Long, Pedido> pedidos;
+    private Map<String, Produto> produtos;
+    private Map<Long, Pedido> pedidos;
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -174,7 +173,7 @@ public class PedidosFacade implements InterPedidoL {
 
     @Override
     public List<Pedido> getPedidosPorPagar() {
-        List<Pedido> pedidos = this.pedidos.getPedidosPorEstado(Estado.PorPagar);
+        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.PorPagar);
         List<Pedido> clones = new ArrayList<>();
         for (Pedido p : pedidos) {
             clones.add(p.clone());
@@ -184,7 +183,7 @@ public class PedidosFacade implements InterPedidoL {
 
     @Override
     public List<Pedido> getPedidosEmPreparacao() {
-        List<Pedido> pedidos = this.pedidos.getPedidosPorEstado(Estado.EmPreparacao);
+        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.EmPreparacao);
         List<Pedido> clones = new ArrayList<>();
         for (Pedido p : pedidos) {
             clones.add(p.clone());
@@ -194,7 +193,7 @@ public class PedidosFacade implements InterPedidoL {
 
     @Override
     public List<Pedido> getPedidosConcluidos() {
-        List<Pedido> pedidos = this.pedidos.getPedidosPorEstado(Estado.Concluido);
+        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.Concluido);
         List<Pedido> clones = new ArrayList<>();
         for (Pedido p : pedidos) {
             clones.add(p.clone());

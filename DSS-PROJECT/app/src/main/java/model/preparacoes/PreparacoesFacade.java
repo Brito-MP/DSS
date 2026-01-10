@@ -17,9 +17,9 @@ import model.pedidos.Produto;
 public class PreparacoesFacade implements InterPreparacoesL {
 
     private List<Long> filaPedidos;
-    private final Map<String, Posto> postos; // idPosto -> Posto
-    private final Map<Long, Pedido> pedidos; // idPedido -> Pedido
-    private final Map<String, Alimento> alimentos; // idAlimento -> Alimento
+    private Map<String, Posto> postos; // idPosto -> Posto
+    private Map<Long, Pedido> pedidos; // idPedido -> Pedido
+    private Map<String, Alimento> alimentos; // idAlimento -> Alimento
 
     // ====================================================================================================
     // CONSTRUTORES
