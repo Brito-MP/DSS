@@ -9,8 +9,10 @@ import java.sql.Statement;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 import model.preparacoes.Posto;
+import model.preparacoes.TipoPosto;
 
 /**
  * DAO para Postos. Implementa Map<String, Posto> persistido em BD.
@@ -24,9 +26,19 @@ public class PostoDAO implements Map<String, Posto> {
 
             // Tabela Postos
             String sql = "CREATE TABLE IF NOT EXISTS postos ("
-                    + "Id VARCHAR(50) NOT NULL PRIMARY KEY"
+                    + "Id VARCHAR(50) NOT NULL PRIMARY KEY,"
+                    + "FuncionarioId BIGINT DEFAULT NULL,"
+                    + "Tipo VARCHAR(30) DEFAULT 'CAIXA'"
                     + ")";
             stm.executeUpdate(sql);
+
+            // Garantir colunas existentes em esquemas antigos
+            try {
+                stm.executeUpdate("ALTER TABLE postos ADD COLUMN IF NOT EXISTS FuncionarioId BIGINT DEFAULT NULL");
+                stm.executeUpdate("ALTER TABLE postos ADD COLUMN IF NOT EXISTS Tipo VARCHAR(30) DEFAULT 'CAIXA'");
+            } catch (SQLException ignore) {
+                // Coluna já existe ou ALTER não suportado
+            }
 
             // Tabela Posto_Alimentos
             sql = "CREATE TABLE IF NOT EXISTS posto_alimentos ("
@@ -111,6 +123,8 @@ public class PostoDAO implements Map<String, Posto> {
             }
 
             posto = new Posto(postoId);
+            posto.setFuncionarioId(rsFuncionario(conn, postoId));
+            posto.setTipo(rsTipo(conn, postoId));
 
             // Carrega quantidades por alimento
             try (PreparedStatement pstm = conn.prepareStatement(
@@ -137,8 +151,15 @@ public class PostoDAO implements Map<String, Posto> {
             conn.setAutoCommit(false);
 
             try (PreparedStatement pstm = conn.prepareStatement(
-                    "INSERT INTO postos (Id) VALUES (?) ON DUPLICATE KEY UPDATE Id=VALUES(Id)")) {
+                    "INSERT INTO postos (Id, FuncionarioId, Tipo) VALUES (?, ?, ?) "
+                            + "ON DUPLICATE KEY UPDATE FuncionarioId=VALUES(FuncionarioId), Tipo=VALUES(Tipo)")) {
                 pstm.setString(1, posto.getId());
+                if (posto.getFuncionarioId() == null) {
+                    pstm.setNull(2, java.sql.Types.BIGINT);
+                } else {
+                    pstm.setLong(2, posto.getFuncionarioId());
+                }
+                pstm.setString(3, posto.getTipo() != null ? posto.getTipo().name() : TipoPosto.CAIXA.name());
                 pstm.executeUpdate();
             }
 
@@ -166,6 +187,36 @@ public class PostoDAO implements Map<String, Posto> {
             throw new NullPointerException(e.getMessage());
         }
         return old;
+    }
+
+    private Long rsFuncionario(Connection conn, String postoId) throws SQLException {
+        try (PreparedStatement pstm = conn.prepareStatement("SELECT FuncionarioId FROM postos WHERE Id=?")) {
+            pstm.setString(1, postoId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    long id = rs.getLong("FuncionarioId");
+                    return rs.wasNull() ? null : id;
+                }
+            }
+        }
+        return null;
+    }
+
+    private TipoPosto rsTipo(Connection conn, String postoId) throws SQLException {
+        try (PreparedStatement pstm = conn.prepareStatement("SELECT Tipo FROM postos WHERE Id=?")) {
+            pstm.setString(1, postoId);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) {
+                    String tipo = rs.getString("Tipo");
+                    try {
+                        return TipoPosto.valueOf(tipo);
+                    } catch (IllegalArgumentException e) {
+                        return TipoPosto.CAIXA;
+                    }
+                }
+            }
+        }
+        return TipoPosto.CAIXA;
     }
 
     @Override
@@ -212,7 +263,22 @@ public class PostoDAO implements Map<String, Posto> {
 
     @Override
     public Collection<Posto> values() {
-        throw new UnsupportedOperationException("Not implemented");
+        Collection<Posto> res = new ArrayList<>();
+        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+                Statement stm = conn.createStatement();
+                ResultSet rs = stm.executeQuery("SELECT Id FROM postos")) {
+            while (rs.next()) {
+                String id = rs.getString("Id");
+                Posto p = this.get(id);
+                if (p != null) {
+                    res.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new NullPointerException(e.getMessage());
+        }
+        return res;
     }
 
     @Override

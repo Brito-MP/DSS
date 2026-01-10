@@ -18,6 +18,7 @@ import model.pedidos.PedidosFacade;
 import model.pedidos.Produto;
 import model.preparacoes.InterPreparacoesL;
 import model.preparacoes.PreparacoesFacade;
+import model.preparacoes.TipoPosto;
 
 public class RestauranteFacade implements InterRestauranteL {
 
@@ -138,8 +139,53 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public List<Long> getPedidosConcluidosIds() {
+        return this.pedidos.getPedidosConcluidosIds();
+    }
+
+    @Override
     public List<Long> getFilaPedidos() {
         return this.preparacoes.getFilaPedidos();
+    }
+
+    @Override
+    public boolean autenticaFuncionario(long id, String password) {
+        return this.preparacoes.autenticaFuncionario(id, password);
+    }
+
+    @Override
+    public boolean funcionarioEAdmin(long id) {
+        return this.preparacoes.funcionarioEAdmin(id);
+    }
+
+    @Override
+    public boolean postoExiste(String postoId) {
+        return this.preparacoes.postoExiste(postoId);
+    }
+
+    @Override
+    public List<String> getPostosLivres() {
+        return this.preparacoes.getPostosLivres();
+    }
+
+    @Override
+    public boolean ocuparPosto(String postoId, long funcionarioId) {
+        return this.preparacoes.ocuparPosto(postoId, funcionarioId);
+    }
+
+    @Override
+    public void libertarPostoDeFuncionario(long funcionarioId) {
+        this.preparacoes.libertarPostoDeFuncionario(funcionarioId);
+    }
+
+    @Override
+    public void registaFuncionario(long id, String nome, String password, boolean admin) {
+        this.preparacoes.registaFuncionario(id, nome, password, admin);
+    }
+
+    @Override
+    public TipoPosto getTipoPosto(String postoId) {
+        return this.preparacoes.getTipoPosto(postoId);
     }
 
 }

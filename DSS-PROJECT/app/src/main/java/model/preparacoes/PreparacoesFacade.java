@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import data.AlimentoDAO;
+import data.FuncionarioDAO;
 import data.PedidoDAO;
 import data.PostoDAO;
 import model.gestao.Alimento;
@@ -18,6 +19,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
     private List<Long> filaPedidos;
     private final Map<String, Posto> postos; // idPosto -> Posto
+    private final Map<Long, Funcionario> funcionarios; // idFuncionario-> Funcionario
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -25,6 +27,7 @@ public class PreparacoesFacade implements InterPreparacoesL {
     public PreparacoesFacade() {
         this.postos = PostoDAO.getInstance();
         this.filaPedidos = new ArrayList<>();
+        this.funcionarios = FuncionarioDAO.getInstance();
     }
 
     @Override
@@ -210,6 +213,76 @@ public class PreparacoesFacade implements InterPreparacoesL {
             this.filaPedidos = new ArrayList<>();
         }
         return new ArrayList<>(this.filaPedidos);
+    }
+
+    @Override
+    public boolean autenticaFuncionario(long id, String password) {
+        Funcionario f = this.funcionarios.get(id);
+        return f != null && f.getPassword().equals(password);
+    }
+
+    @Override
+    public boolean funcionarioEAdmin(long id) {
+        Funcionario f = this.funcionarios.get(id);
+        return f != null && f.isAdmin();
+    }
+
+    @Override
+    public boolean postoExiste(String postoId) {
+        return this.postos.containsKey(postoId);
+    }
+
+    @Override
+    public List<String> getPostosLivres() {
+        List<String> livres = new ArrayList<>();
+        for (Posto posto : this.postos.values()) {
+            if (posto != null && posto.estaLivre()) {
+                livres.add(posto.getId());
+            }
+        }
+        return livres;
+    }
+
+    @Override
+    public boolean ocuparPosto(String postoId, long funcionarioId) {
+        Posto posto = this.postos.get(postoId);
+        if (posto == null || !posto.estaLivre()) {
+            return false;
+        }
+        // Impede que o mesmo funcionário ocupe múltiplos postos em simultâneo
+        for (Posto p : this.postos.values()) {
+            Long ocupadoPor = p != null ? p.getFuncionarioId() : null;
+            if (ocupadoPor != null && ocupadoPor == funcionarioId) {
+                return false;
+            }
+        }
+        posto.setFuncionarioId(funcionarioId);
+        this.postos.put(postoId, posto);
+        return true;
+    }
+
+    @Override
+    public void libertarPostoDeFuncionario(long funcionarioId) {
+        for (Posto posto : this.postos.values()) {
+            Long ocupadoPor = posto != null ? posto.getFuncionarioId() : null;
+            if (ocupadoPor != null && ocupadoPor == funcionarioId) {
+                posto.setFuncionarioId(null);
+                this.postos.put(posto.getId(), posto); 
+            }
+        }
+    }
+
+    @Override
+    public void registaFuncionario(long id, String nome, String password, boolean admin) {
+        Perfil perfil = admin ? Perfil.ADMIN : Perfil.NORMAL;
+        Funcionario f = new Funcionario(id, nome, password, perfil);
+        this.funcionarios.put(id, f);
+    }
+
+    @Override
+    public TipoPosto getTipoPosto(String postoId) {
+        Posto posto = this.postos.get(postoId);
+        return posto != null ? posto.getTipo() : null;
     }
 
 }
