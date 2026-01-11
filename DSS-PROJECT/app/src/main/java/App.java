@@ -44,17 +44,17 @@ public class App {
         NewMenu menu = new NewMenu(new String[] {
                 "TestaDAO",
                 "Funcionario",
-                "Cliente",
-                "Sair"
+                "Cliente"//,
+                //"Sair"
         });
 
         menu.setHandler(1, this::testaDAO);
         menu.setHandler(2, this::menuFuncionario);
         menu.setHandler(3, this::menuCliente);
-        menu.setHandler(4, () -> {
+        /* menu.setHandler(4, () -> {
             System.out.println("Até já!");
             System.exit(0);
-        });
+        }); */
 
         menu.run();
         scanner.close();
