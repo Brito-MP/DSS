@@ -10,6 +10,7 @@ import model.InterRestauranteL;
 import model.RestauranteFacade;
 import model.gestao.Alimento;
 import model.pedidos.Item;
+import model.pedidos.Menu;
 import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
@@ -28,7 +29,7 @@ public class App {
 
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
-        //PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
+        // PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
 
         App app = new App();
         app.run();
@@ -101,7 +102,7 @@ public class App {
 
     private void caixa() {
         List<Pedido> pendentes = model.getPedidosPorPagar();
-        
+
         String[] opcoes = new String[pendentes.size()];
         for (int i = 0; i < pendentes.size(); i++) {
             Pedido pedido = pendentes.get(i);
@@ -261,8 +262,8 @@ public class App {
                     "Adicionar nota",
                     "Registar Pedido"
             });
-            
-            menu.setHandler(1,() -> System.out.println("Construir Menu - Em construção"));
+
+            menu.setHandler(1, () -> System.out.println("Construir Menu - Em construção"));
             menu.setHandler(2, () -> displayMenus());
             menu.setHandler(3, () -> displayItens());
             menu.setHandler(4, () -> displayPedido());
@@ -277,7 +278,6 @@ public class App {
                     concluido[0] = true;
                 }
             });
-
 
             menu.runOnce();
         }
@@ -316,21 +316,6 @@ public class App {
     }
 
     // ========== MENUS DE PRODUTO ==========
-    private void menuItem(String menuProduto) {
-        NewMenu menu = new NewMenu(new String[] {
-                "Adicionar ao Pedido",
-                "Adicionar troca",
-                "Adicionar Nota"
-        });
-
-        menu.setHandler(1, () -> addEscolhidos(menuProduto));
-        menu.setHandler(2, () -> displayTrocasProduto());
-        menu.setHandler(3, () -> {
-            System.out.println("Adicionar nota - Em construção");
-        });
-
-        menu.run();
-    }
 
     private boolean menuTrocasItem(long idPedido) {
         boolean[] pago = { false }; // Array para permitir modificação dentro da lambda
@@ -357,12 +342,12 @@ public class App {
 
         menu.setHandler(1, () -> {
             model.validaPagamento(idPedido);
-            System.out.println("✓ Pagamento realizado com MBWay com sucesso!");
+            System.out.println(model.geraFatura(idPedido));
             pago[0] = true;
         });
 
         menu.setHandler(2, () -> {
-            System.out.println("✓ Pedido registado para pagamento em Caixa!");
+            System.out.println(model.geraFatura(idPedido));
             pago[0] = true;
         });
 
@@ -394,13 +379,43 @@ public class App {
                 Produto produtoEscolhido = produtos.get(index);
                 if (produtoEscolhido instanceof Item) {
                     menuEscolherAlimento(idPedido, produtoEscolhido.getId());
+                } else if (produtoEscolhido instanceof Menu) {
+                    menuEscolherItemDoMenu(idPedido, (Menu) produtoEscolhido);
                 } else {
-                    System.out.println("✗ Apenas itens individuais permitem trocas de alimentos!");
+                    System.out.println("✗ Tipo de produto não suportado para trocas!");
                 }
             });
         }
 
         menuProdutos.runOnce();
+    }
+
+    private void menuEscolherItemDoMenu(long idPedido, Menu menu) {
+        List<Item> itens = menu.getItens();
+        if (itens.isEmpty()) {
+            System.out.println("✗ Menu não tem itens!");
+            return;
+        }
+
+        // Criar array com nomes dos items do menu
+        String[] opcoesItens = new String[itens.size()];
+        for (int i = 0; i < itens.size(); i++) {
+            Item item = itens.get(i);
+            opcoesItens[i] = item.getNome() + " (" + item.getId() + ")";
+        }
+
+        NewMenu menuItens = new NewMenu(opcoesItens);
+
+        // Configurar handlers para cada item do menu
+        for (int i = 0; i < itens.size(); i++) {
+            final int index = i;
+            menuItens.setHandler(i + 1, () -> {
+                Item itemEscolhido = itens.get(index);
+                menuEscolherAlimento(idPedido, itemEscolhido.getId());
+            });
+        }
+
+        menuItens.runOnce();
     }
 
     private void menuEscolherAlimento(long idPedido, String idProduto) {
@@ -698,10 +713,6 @@ public class App {
 
     private void displayTrocasProduto() {
         // Em construção
-    }
-
-    private void pagar(boolean takeAway) {
-        System.out.println("Pagar - Em construção");
     }
 
     // ========== TESTE DAO ==========

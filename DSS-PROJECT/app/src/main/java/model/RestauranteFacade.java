@@ -77,7 +77,7 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
-    public Map<String, Integer> apresentaStock(){
+    public Map<String, Integer> apresentaStock() {
         return this.gestao.apresentaStock();
     }
 
@@ -95,6 +95,10 @@ public class RestauranteFacade implements InterRestauranteL {
     @Override
     public void entregarPedido(long idPedido) {
         this.pedidos.entregarPedido(idPedido);
+    }
+
+    public String geraFatura(long idPedido) {
+        return this.pedidos.geraFatura(idPedido);
     }
 
     @Override
