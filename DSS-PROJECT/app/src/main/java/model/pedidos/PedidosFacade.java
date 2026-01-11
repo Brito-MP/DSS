@@ -19,77 +19,11 @@ public class PedidosFacade implements InterPedidoL {
     public PedidosFacade() {
         this.pedidos = PedidoDAO.getInstance();
         this.produtos = ProdutoDAO.getInstance();
-
     }
 
     // ====================================================================================================
     // GETTERS E SETTERS
     // ====================================================================================================
-    // ====================================================================================================
-    // MÉTODOS
-    // ====================================================================================================
-    @Override
-    public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo) {
-        List<Produto> produtosSelecionados = new ArrayList<>();
-
-        double precoTotal = 0;
-        double tempoTotal = 0;
-
-        for (String codigo : codigoProdutos) {
-            try {
-                // Buscar o produto da BD usando this.produtos
-                Produto produto = this.produtos.get(codigo);
-                if (produto != null) {
-                    produtosSelecionados.add(produto);
-                    // Calcular preço e tempo totais
-                    precoTotal += produto.getPreco();
-                    tempoTotal += produto.getTempoConfecaoEsperado();
-                } else {
-                    System.out.println("⚠ Produto não encontrado: " + codigo); // apagar no futuro
-                }
-            } catch (Exception e) {
-                System.out.println("❌ Erro ao buscar produto " + codigo + ": " + e.getMessage()); // apagar n no futuro
-                e.printStackTrace();
-            }
-        }
-
-        Pedido pedido = new Pedido(produtosSelecionados, nota, tipo, precoTotal, tempoTotal);
-
-        this.pedidos.put(pedido.getIdCounter(), pedido);
-
-        return pedido.getIdCounter();
-    }
-
-    /*
-     * @Override
-     * public void registaItem(String id, double preco, String nome, double
-     * tempoConfecaoEsperado) {
-     * Item item = new Item(id, preco, nome, tempoConfecaoEsperado);
-     * this.produtos.put(id, item);
-     * }
-     */
-    @Override
-    public void validaPagamento(long idPedido) {
-        Pedido pedido = this.pedidos.get(idPedido);
-
-        pedido.pagamentoConcluido();
-        this.pedidos.put(idPedido, pedido);
-    }
-
-    @Override
-    public boolean registaTroca(long idPedido, String idProduto, String idAlimentoAtual, Alimento alimentoDesejado)
-            throws PedidoException {
-        Pedido pedido = this.pedidos.get(idPedido);
-        if (pedido != null) {
-            // Delegar a troca para o pedido (composição)
-            pedido.registaTroca(idProduto, idAlimentoAtual, alimentoDesejado);
-            // Persistir as alterações no pedido
-            this.pedidos.put(idPedido, pedido);
-            return true;
-        }
-        throw new PedidoException("Pedido " + idPedido + " não encontrado");
-    }
-
     @Override
     public List<Produto> getProdutosPedido(long idPedido) {
         Pedido pedido = this.pedidos.get(idPedido);
@@ -139,38 +73,6 @@ public class PedidosFacade implements InterPedidoL {
     }
 
     @Override
-    public void entregarPedido(long idPedido) {
-        Pedido pedido = this.pedidos.get(idPedido);
-
-        if (pedido == null) {
-            System.out.println("✗ Pedido " + idPedido + " não encontrado para entrega.");
-            return;
-        }
-
-        pedido.setEstado(Estado.Entregue);
-        this.pedidos.put(idPedido, pedido);
-    }
-
-    /*
-     * @Override
-     * public void atualizaEstadoPedido(Long idPedido) {
-     * Pedido pedido = pedidos.get(idPedido);
-     * 
-     * if (pedido != null) {
-     * pedido.pedidoEntregue();
-     * pedidos.put(idPedido, pedido);
-     * 
-     * System.out.println("Pedido " + idPedido +
-     * " foi entregue e o estado foi atualizado para: " + pedido.getEstado()); //
-     * apagar no futuro???
-     * } else {
-     * System.out.println("Pedido com ID " + idPedido + " não encontrado.");//
-     * apagar no futuro
-     * }
-     * }
-     */
-
-    @Override
     public List<Pedido> getPedidosPorPagar() {
         return this.getPedidosPorEstado(Estado.PorPagar);
     }
@@ -204,6 +106,100 @@ public class PedidosFacade implements InterPedidoL {
             }
         }
         return clones;
+    }
+
+    // ====================================================================================================
+    // MÉTODOS
+    // ====================================================================================================
+    @Override
+    public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo) {
+        List<Produto> produtosSelecionados = new ArrayList<>();
+
+        double precoTotal = 0;
+        double tempoTotal = 0;
+
+        for (String codigo : codigoProdutos) {
+            try {
+                Produto produto = this.produtos.get(codigo);
+                if (produto != null) {
+                    produtosSelecionados.add(produto);
+                    precoTotal += produto.getPreco();
+                    tempoTotal += produto.getTempoConfecaoEsperado();
+                }
+            } catch (Exception e) {
+                // Ignorar produtos não encontrados
+            }
+        }
+
+        Pedido pedido = new Pedido(produtosSelecionados, nota, tipo, precoTotal, tempoTotal);
+
+        this.pedidos.put(pedido.getIdCounter(), pedido);
+
+        return pedido.getIdCounter();
+    }
+
+    @Override
+    public boolean registaTroca(long idPedido, String idProduto, String idAlimentoAtual, Alimento alimentoDesejado)
+            throws PedidoException {
+        Pedido pedido = this.pedidos.get(idPedido);
+        if (pedido != null) {
+            // Delegar a troca para o pedido (composição)
+            pedido.registaTroca(idProduto, idAlimentoAtual, alimentoDesejado);
+            // Persistir as alterações no pedido
+            this.pedidos.put(idPedido, pedido);
+            return true;
+        }
+        throw new PedidoException("Pedido " + idPedido + " não encontrado");
+    }
+
+    @Override
+    public void validaPagamento(long idPedido) {
+        Pedido pedido = this.pedidos.get(idPedido);
+
+        pedido.pagamentoConcluido();
+        this.pedidos.put(idPedido, pedido);
+    }
+
+    @Override
+    public void entregarPedido(long idPedido) {
+        Pedido pedido = this.pedidos.get(idPedido);
+
+        if (pedido == null) {
+            return;
+        }
+
+        pedido.setEstado(Estado.Entregue);
+        this.pedidos.put(idPedido, pedido);
+    }
+
+    @Override
+    public String geraFatura(long idPedido) {
+        Pedido pedido = this.pedidos.get(idPedido);
+        if (pedido == null) {
+            return "";
+        }
+
+        StringBuilder fatura = new StringBuilder();
+        fatura.append("\n========== FATURA ==========\n");
+        fatura.append("Pedido #").append(pedido.getIdCounter()).append("\n");
+        fatura.append("Tipo: ").append(pedido.getTipo() ? "Restaurante" : "Take Away").append("\n");
+        fatura.append("---\n");
+
+        for (Produto produto : pedido.getProdutos()) {
+            fatura.append("• ").append(produto.getNome())
+                    .append(" - €").append(String.format("%.2f", produto.getPreco())).append("\n");
+        }
+
+        fatura.append("---\n");
+        fatura.append("Total: €").append(String.format("%.2f", pedido.getPreco())).append("\n");
+        fatura.append("Tempo estimado: ").append((int) pedido.getTempoConfecaoEsperado()).append(" min\n");
+
+        if (pedido.getNota() != null && !pedido.getNota().isEmpty()) {
+            fatura.append("Nota: ").append(pedido.getNota()).append("\n");
+        }
+
+        fatura.append("===========================\n");
+        return fatura.toString();
     }
 
     // ====================================================================================================
