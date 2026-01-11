@@ -88,6 +88,11 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public List<String> getMensagens() {
+        return this.gestao.getMensagens();
+    }
+
+    @Override
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException {
         return this.pedidos.getSubstitutosDisponiveis(idPedido, idProduto, idAlimentoAtual);
@@ -192,12 +197,12 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public boolean autenticaFuncionario(long id, String password) {
-        return this.preparacoes.autenticaFuncionario(id, password);
+        return this.gestao.autenticaFuncionario(id, password);
     }
 
     @Override
     public boolean funcionarioEAdmin(long id) {
-        return this.preparacoes.funcionarioEAdmin(id);
+        return this.gestao.funcionarioEAdmin(id);
     }
 
     @Override
@@ -207,7 +212,7 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public List<String> getPostosLivres() {
-        return this.preparacoes.getPostosLivres();
+        return this.gestao.getPostosLivres();
     }
 
     @Override
@@ -222,7 +227,7 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public void registaFuncionario(long id, String nome, String password, boolean admin) {
-        this.preparacoes.registaFuncionario(id, nome, password, admin);
+        this.gestao.registaFuncionario(id, nome, password, admin);
     }
 
     @Override
@@ -303,6 +308,11 @@ public class RestauranteFacade implements InterRestauranteL {
     @Override
     public String getNomeProduto(String idProduto) {
         return this.pedidos.getNomeProduto(idProduto);
+    }
+
+    @Override
+    public boolean requisitarAlimento(String alimentoId, String postoId, int quantidade) {
+        return this.preparacoes.requisitarAlimento(alimentoId, postoId, quantidade);
     }
 
 }

@@ -20,23 +20,17 @@ public interface InterPreparacoesL {
 
     List<Long> getFilaPedidos();
 
-    boolean autenticaFuncionario(long id, String password);
-
-    boolean funcionarioEAdmin(long id);
-
     boolean postoExiste(String postoId);
-
-    List<String> getPostosLivres();
 
     boolean ocuparPosto(String postoId, long funcionarioId);
 
     void libertarPostoDeFuncionario(long funcionarioId);
-
-    void registaFuncionario(long id, String nome, String password, boolean admin);
 
     TipoPosto getTipoPosto(String postoId);
 
     String getPostoDeFuncionario(long funcionarioId);
 
     boolean ingredientesSuficientes(long idPedido, String postoId);
+
+    boolean requisitarAlimento(String alimentoId, String postoId, int quantidade);
 }

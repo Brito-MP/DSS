@@ -24,6 +24,8 @@ public interface InterRestauranteL {
 
         public void enviaMensagem(String mensagem);
 
+        public List<String> getMensagens();
+
         public void entregarPedido(long idPedido);
 
         public String geraFatura(long idPedido);
@@ -105,5 +107,7 @@ public interface InterRestauranteL {
     public List<String> getItensIds();
 
     public String getNomeProduto(String idProduto);
+
+    public boolean requisitarAlimento(String alimentoId, String postoId, int quantidade);
 
 }
