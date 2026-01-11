@@ -20,8 +20,8 @@ public class PreparacoesFacade implements InterPreparacoesL {
     private List<Long> filaPedidos;
     private Map<String, Posto> postos; // idPosto -> Posto
     private final Map<Long, Funcionario> funcionarios; // idFuncionario-> Funcionario
-    private Map<Long, Pedido> pedidos; // idPedido -> Pedido
-    private Map<String, Alimento> alimentos; // idAlimento -> Alimento
+    private Map<Long, Pedido> pedidos; // idPedido -> Pedido  // Em vez de tar sempre a pedir os pedidos ao facade acedemos pelo DAO
+    private Map<String, Alimento> alimentos; // idAlimento -> Alimento // Em vez de tar sempre a pedir os alimentos ao facade acedemos pelo DAO
 
     // ====================================================================================================
     // CONSTRUTORES
