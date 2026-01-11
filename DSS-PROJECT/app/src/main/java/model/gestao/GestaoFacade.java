@@ -11,8 +11,6 @@ import data.FuncionarioDAO;
 import data.PedidoDAO;
 import data.PostoDAO;
 import model.pedidos.Pedido;
-import model.preparacoes.Funcionario;
-import model.preparacoes.Perfil;
 import model.preparacoes.Posto;
 
 public class GestaoFacade implements InterGestaoL {

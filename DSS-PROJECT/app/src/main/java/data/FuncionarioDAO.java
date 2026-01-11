@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
-import model.preparacoes.Funcionario;
-import model.preparacoes.Perfil;
+import model.gestao.Funcionario;
+import model.gestao.Perfil;
 
 /**
  * DAO simples para Funcionários. Usa o Id (número de trabalhador) como chave primária.

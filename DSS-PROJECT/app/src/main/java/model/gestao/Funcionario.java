@@ -1,4 +1,4 @@
-package model.preparacoes;
+package model.gestao;
 
 public class Funcionario {
 

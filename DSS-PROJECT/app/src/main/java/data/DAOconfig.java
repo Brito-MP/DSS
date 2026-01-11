@@ -14,7 +14,7 @@ package data;
  */
 public class DAOconfig {
     public static final String USERNAME = "root";                        // Actualizar
-    public static final String PASSWORD = "080605";                   // Actualizar
+    public static final String PASSWORD = "1234";                   // Actualizar
     private static final String DATABASE = "Restaurante";          // Actualizar
     private static final String DRIVER = "jdbc:mariadb";        // Usar para MariaDB
     //private static final String DRIVER = "jdbc:mysql";        // Usar para MySQL
