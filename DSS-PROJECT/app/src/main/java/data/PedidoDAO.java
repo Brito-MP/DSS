@@ -156,12 +156,6 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     + "FOREIGN KEY(AlimentoId) REFERENCES alimentos(Id) ON DELETE CASCADE)";
             stm.executeUpdate(sql);
 
-            // Inicializar produtos e relações via utilitiesDAO
-            try (Connection connInit = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME,
-                    DAOconfig.PASSWORD)) {
-                utilitiesDAO.inicializarBaseDados(connInit);
-            }
-
             // Inicializar o IdCounter do Pedido com o maior ID da base de dados
             try (Statement stmCounter = conn.createStatement(); ResultSet rsCounter = stmCounter.executeQuery("SELECT COALESCE(MAX(Id), 0) + 1 FROM pedidos")) {
                 if (rsCounter.next()) {

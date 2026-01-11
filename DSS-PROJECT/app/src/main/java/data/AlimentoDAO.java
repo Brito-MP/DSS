@@ -1,9 +1,17 @@
 package data;
 
-import model.gestao.Alimento;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import java.sql.*;
-import java.util.*;
+import model.gestao.Alimento;
 
 /**
  * DAO para Alimentos
@@ -23,40 +31,11 @@ public class AlimentoDAO implements Map<String, Alimento> {
                     "Quantidade INT DEFAULT 0)";
             stm.executeUpdate(sql);
 
-            // Inicializar alimentos por defeito
-            inicializarAlimentos();
-
         } catch (SQLException e) {
             e.printStackTrace();
             throw new NullPointerException(e.getMessage());
         }
     }
-
-    private void inicializarAlimentos() {
-        // Verifica se a tabela já tem alimentos
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
-                Statement stm = conn.createStatement();
-                ResultSet rs = stm.executeQuery("SELECT count(*) FROM alimentos")) {
-            if (rs.next() && rs.getInt(1) == 0) {
-                // Tabela vazia, inicializa alimentos
-                this.put("carne_vaca", new Alimento(100, "carne_vaca", "Carne Vaca"));
-                this.put("carne_frango", new Alimento(100, "carne_frango", "Carne Frango"));
-                this.put("bacon", new Alimento(80, "bacon", "Bacon"));
-                this.put("alface", new Alimento(60, "alface", "Alface"));
-                this.put("tomate", new Alimento(70, "tomate", "Tomate"));
-                this.put("pao_normal", new Alimento(50, "pao_normal", "Pão Normal"));
-                this.put("pao_brioche", new Alimento(40, "pao_brioche", "Pão Brioche"));
-                this.put("cebola", new Alimento(50, "cebola", "Cebola"));
-                this.put("batata", new Alimento(120, "batata", "Batata"));
-                this.put("nugget", new Alimento(90, "nugget", "Nugget"));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new NullPointerException(e.getMessage());
-        }
-    }
-
-    
 
     public static AlimentoDAO getInstance() {
         if (AlimentoDAO.singleton == null) {

@@ -20,8 +20,8 @@ public class PreparacoesFacade implements InterPreparacoesL {
     private List<Long> filaPedidos;
     private Map<String, Posto> postos; // idPosto -> Posto
     private final Map<Long, Funcionario> funcionarios; // idFuncionario-> Funcionario
-    private Map<Long, Pedido> pedidos; // idPedido -> Pedido
-    private Map<String, Alimento> alimentos; // idAlimento -> Alimento
+    private Map<Long, Pedido> pedidos; // idPedido -> Pedido  // Em vez de tar sempre a pedir os pedidos ao facade acedemos pelo DAO
+    private Map<String, Alimento> alimentos; // idAlimento -> Alimento // Em vez de tar sempre a pedir os alimentos ao facade acedemos pelo DAO
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -279,6 +279,56 @@ public class PreparacoesFacade implements InterPreparacoesL {
     public TipoPosto getTipoPosto(String postoId) {
         Posto posto = this.postos.get(postoId);
         return posto != null ? posto.getTipo() : null;
+    }
+
+    @Override
+    public String getPostoDeFuncionario(long funcionarioId) {
+        for (Posto posto : this.postos.values()) {
+            Long ocupadoPor = posto != null ? posto.getFuncionarioId() : null;
+            if (ocupadoPor != null && ocupadoPor == funcionarioId) {
+                return posto.getId();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean ingredientesSuficientes(long idPedido, String postoId) {
+        Pedido pedido = this.pedidos.get(idPedido);
+        Posto posto = this.postos.get(postoId);
+
+        if (pedido == null || posto == null) {
+            return false;
+        }
+
+        Map<String, Integer> stock = posto.getQuantidadeAlimento();
+
+        for (Produto produto : pedido.getProdutos()) {
+            if (produto instanceof Item) {
+                if (!temStockParaItem((Item) produto, stock)) {
+                    return false;
+                }
+            } else if (produto instanceof Menu) {
+                for (Item item : ((Menu) produto).getItens()) {
+                    if (!temStockParaItem(item, stock)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean temStockParaItem(Item item, Map<String, Integer> stock) {
+        for (Alimento alimento : item.getAlimentos().values()) {
+            int requerido = alimento.getQuantidade();
+            int disponivel = stock.getOrDefault(alimento.getId(), 0);
+            if (disponivel < requerido) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

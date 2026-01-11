@@ -92,6 +92,13 @@ public class App {
     }
 
     private String selecionaPostoSeNecessario(long funcionarioId) {
+        String postoAtual = model.getPostoDeFuncionario(funcionarioId);
+        if (postoAtual != null) {
+            TipoPosto tipo = model.getTipoPosto(postoAtual);
+            System.out.println("✓ A utilizar posto já ocupado: " + postoAtual + " (" + tipo + ")");
+            return postoAtual;
+        }
+
         while (true) {
             List<String> livres = model.getPostosLivres();
             if (livres.isEmpty()) {
@@ -172,6 +179,7 @@ public class App {
         menu.setHandler(3, () -> model.libertarPostoDeFuncionario(funcionarioId));
 
         menu.run();
+        model.libertarPostoDeFuncionario(funcionarioId);
     }
 
     private void displayPostosLivres() {
@@ -277,14 +285,16 @@ public class App {
         NewMenu menu = new NewMenu(new String[] {
                 "Pedidos em preparação",
                 "Requisitar ingredientes",
+                "Iniciar execução de pedido",
                 "Atrasar pedido e atualizar fila",
                 "Encerrar pedido"
         });
 
         menu.setHandler(1, () -> displayPedidosEmPreparacao());
         menu.setHandler(2, () -> requisitarIngredientes());
-        menu.setHandler(3, () -> atrasarPedidoEAtualizarFila());
-        menu.setHandler(4, () -> encerrarPedido());
+        menu.setHandler(3, () -> iniciarExecucaoPedido());
+        menu.setHandler(4, () -> atrasarPedidoEAtualizarFila());
+        menu.setHandler(5, () -> encerrarPedido());
 
         menu.run();
     }
@@ -357,6 +367,7 @@ public class App {
     private boolean takeAway() {
         boolean[] concluido = { false };
         boolean[] pagou = { false };
+        limparPedidoAtual();
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
@@ -383,6 +394,7 @@ public class App {
                 if (pagamento) {
                     pagou[0] = true;
                     concluido[0] = true;
+                    limparPedidoAtual();
                 }
             });
 
@@ -394,6 +406,7 @@ public class App {
     private boolean restaurante() {
         boolean[] concluido = { false };
         boolean[] pagou = { false };
+        limparPedidoAtual();
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
@@ -418,6 +431,7 @@ public class App {
                 if (pagamento) {
                     pagou[0] = true;
                     concluido[0] = true;
+                    limparPedidoAtual();
                 }
             });
 
@@ -732,6 +746,12 @@ public class App {
         System.out.println("✓ " + item + " adicionado ao pedido!");
     }
 
+    private void limparPedidoAtual() {
+        produtos_escolhidos.clear();
+        nota = "";
+        idPedido = -1;
+    }
+
     private void displayPedido() {
         System.out.println("\n========== PEDIDO ==========");
         if (produtos_escolhidos.isEmpty()) {
@@ -878,6 +898,28 @@ public class App {
             } catch (NumberFormatException e) {
                 System.out.println("Valor de atraso inválido, ignorando atraso.");
             }
+        }
+    }
+
+    private void iniciarExecucaoPedido() {
+        long idPedido = escolherPedidoEmPreparacao();
+        if (idPedido < 0) {
+            return;
+        }
+
+        System.out.print("ID do posto responsável: ");
+        String postoId = scanner.nextLine().trim();
+        if (postoId.isEmpty()) {
+            System.out.println("ID do posto inválido.");
+            return;
+        }
+
+        if (model.ingredientesSuficientes(idPedido, postoId)) {
+            System.out.println("✓ Ingredientes suficientes no posto " + postoId + ". Pedido " + idPedido
+                    + " em execução. Use 'Encerrar pedido' quando terminar.");
+        } else {
+            System.out.println("✗ Ingredientes insuficientes no posto " + postoId
+                    + ". Use 'Requisitar ingredientes' antes de executar.");
         }
     }
 

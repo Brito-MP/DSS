@@ -230,4 +230,14 @@ public class RestauranteFacade implements InterRestauranteL {
         return this.preparacoes.getTipoPosto(postoId);
     }
 
+    @Override
+    public String getPostoDeFuncionario(long funcionarioId) {
+        return this.preparacoes.getPostoDeFuncionario(funcionarioId);
+    }
+
+    @Override
+    public boolean ingredientesSuficientes(long idPedido, String postoId) {
+        return this.preparacoes.ingredientesSuficientes(idPedido, postoId);
+    }
+
 }
