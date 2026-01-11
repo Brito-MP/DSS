@@ -101,6 +101,44 @@ public class RestauranteFacade implements InterRestauranteL {
         return this.pedidos.geraFatura(idPedido);
     }
 
+    public Alimento getAlimento(String idAlimento) {
+        return this.gestao.getAlimento(idAlimento);
+    }
+
+    public boolean registaTrocaEmItemDoMenu(long idPedido, String idItemNoMenu, String idAlimentoAtual,
+            String idAlimentoDesejado) throws PedidoException {
+        // Usar PedidoDAO diretamente
+        data.PedidoDAO pedidoDAO = data.PedidoDAO.getInstance();
+        Pedido pedido = pedidoDAO.get(idPedido);
+
+        if (pedido == null) {
+            throw new PedidoException("Pedido não encontrado");
+        }
+
+        // Procurar o Item dentro dos Menus
+        for (Produto produto : pedido.getProdutos()) {
+            if (produto instanceof model.pedidos.Menu) {
+                model.pedidos.Menu menu = (model.pedidos.Menu) produto;
+                for (model.pedidos.Item item : menu.getItens()) {
+                    if (item.getId().equals(idItemNoMenu)) {
+                        // Encontrou o Item, fazer a troca
+                        Alimento alimentoDesejado = this.gestao.getAlimento(idAlimentoDesejado);
+                        if (alimentoDesejado == null) {
+                            throw new PedidoException("Alimento desejado não encontrado");
+                        }
+                        item.registaTroca(idAlimentoAtual, alimentoDesejado);
+
+                        // Guardar o Pedido na DAO
+                        pedidoDAO.put(idPedido, pedido);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        throw new PedidoException("Item " + idItemNoMenu + " não encontrado no Menu");
+    }
+
     @Override
     public void encerrarPedido(long idPedido, String postoId) {
         this.preparacoes.encerrarPedido(idPedido, postoId);

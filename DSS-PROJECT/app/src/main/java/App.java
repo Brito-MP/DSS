@@ -29,7 +29,7 @@ public class App {
 
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
-        // PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
+        //PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
 
         App app = new App();
         app.run();
@@ -411,11 +411,97 @@ public class App {
             final int index = i;
             menuItens.setHandler(i + 1, () -> {
                 Item itemEscolhido = itens.get(index);
-                menuEscolherAlimento(idPedido, itemEscolhido.getId());
+                menuEscolherAlimentoDoItem(idPedido, itemEscolhido);
             });
         }
 
         menuItens.runOnce();
+    }
+
+    private void menuEscolherAlimentoDoItem(long idPedido, Item item) {
+        Map<String, Alimento> alimentos = item.getAlimentos();
+
+        if (alimentos.isEmpty()) {
+            System.out.println("✗ Este item não tem alimentos para trocar!");
+            return;
+        }
+
+        // Criar array com nomes dos alimentos
+        List<String> alimentosIds = new ArrayList<>(alimentos.keySet());
+        String[] opcoesAlimentos = new String[alimentosIds.size()];
+
+        for (int i = 0; i < alimentosIds.size(); i++) {
+            String alimentoId = alimentosIds.get(i);
+            Alimento alimento = alimentos.get(alimentoId);
+            opcoesAlimentos[i] = alimento.getNome() + " (" + alimentoId + ")";
+        }
+
+        NewMenu menuAlimentos = new NewMenu(opcoesAlimentos);
+
+        // Configurar handlers para cada alimento
+        for (int i = 0; i < alimentosIds.size(); i++) {
+            final int index = i;
+            menuAlimentos.setHandler(i + 1, () -> {
+                String alimentoAtualId = alimentosIds.get(index);
+                menuEscolherSubstitutoDoItem(idPedido, item, alimentoAtualId);
+            });
+        }
+
+        menuAlimentos.runOnce();
+    }
+
+    private void menuEscolherSubstitutoDoItem(long idPedido, Item item, String alimentoAtualId) {
+        try {
+            List<String> substitutos = item.getTrocas().get(alimentoAtualId);
+
+            if (substitutos == null || substitutos.isEmpty()) {
+                System.out.println("✗ Não há substitutos disponíveis para este alimento!");
+                return;
+            }
+
+            // Criar array com nomes dos substitutos
+            String[] opcoesSubstitutos = new String[substitutos.size()];
+            for (int i = 0; i < substitutos.size(); i++) {
+                String substitutoId = substitutos.get(i);
+                Alimento alimento = model.getAlimento(substitutoId);
+                if (alimento != null) {
+                    opcoesSubstitutos[i] = alimento.getNome() + " (" + substitutoId + ")";
+                } else {
+                    opcoesSubstitutos[i] = substitutoId;
+                }
+            }
+
+            NewMenu menuSubstitutos = new NewMenu(opcoesSubstitutos);
+
+            // Configurar handlers para cada substituto
+            for (int i = 0; i < substitutos.size(); i++) {
+                final int index = i;
+                menuSubstitutos.setHandler(i + 1, () -> {
+                    String alimentoDesejadoId = substitutos.get(index);
+                    try {
+                        Alimento alimentoDesejado = model.getAlimento(alimentoDesejadoId);
+                        if (alimentoDesejado != null) {
+                            // Fazer a troca e guardar na base de dados
+                            boolean sucesso = model.registaTrocaEmItemDoMenu(idPedido, item.getId(), alimentoAtualId,
+                                    alimentoDesejadoId);
+                            if (sucesso) {
+                                System.out.println("✓ Troca realizada com sucesso!");
+                            } else {
+                                System.out.println("✗ Erro ao realizar a troca!");
+                            }
+                        } else {
+                            System.out.println("✗ Alimento desejado não encontrado!");
+                        }
+                    } catch (PedidoException e) {
+                        System.out.println("✗ Erro: " + e.getMessage());
+                    }
+                });
+            }
+
+            menuSubstitutos.runOnce();
+        } catch (Exception e) {
+            System.out.println("✗ Erro ao processar substitutos: " + e.getMessage());
+        }
     }
 
     private void menuEscolherAlimento(long idPedido, String idProduto) {

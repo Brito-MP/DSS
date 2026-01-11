@@ -27,6 +27,11 @@ public interface InterRestauranteL {
 
         public String geraFatura(long idPedido);
 
+        public Alimento getAlimento(String idAlimento);
+
+        public boolean registaTrocaEmItemDoMenu(long idPedido, String idItemNoMenu, String idAlimentoAtual,
+                        String idAlimentoDesejado) throws PedidoException;
+
         public void encerrarPedido(long idPedido, String postoId);
 
         public void removerPedidoFila(long idPedido, List<Long> filaPedidos);
