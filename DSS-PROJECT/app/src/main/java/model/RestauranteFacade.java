@@ -88,6 +88,11 @@ public class RestauranteFacade implements InterRestauranteL {
     }
 
     @Override
+    public List<String> getMensagens() {
+        return this.gestao.getMensagens();
+    }
+
+    @Override
     public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
             throws PedidoException {
         return this.pedidos.getSubstitutosDisponiveis(idPedido, idProduto, idAlimentoAtual);
@@ -192,12 +197,12 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public boolean autenticaFuncionario(long id, String password) {
-        return this.preparacoes.autenticaFuncionario(id, password);
+        return this.gestao.autenticaFuncionario(id, password);
     }
 
     @Override
     public boolean funcionarioEAdmin(long id) {
-        return this.preparacoes.funcionarioEAdmin(id);
+        return this.gestao.funcionarioEAdmin(id);
     }
 
     @Override
@@ -207,7 +212,7 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public List<String> getPostosLivres() {
-        return this.preparacoes.getPostosLivres();
+        return this.gestao.getPostosLivres();
     }
 
     @Override
@@ -222,7 +227,7 @@ public class RestauranteFacade implements InterRestauranteL {
 
     @Override
     public void registaFuncionario(long id, String nome, String password, boolean admin) {
-        this.preparacoes.registaFuncionario(id, nome, password, admin);
+        this.gestao.registaFuncionario(id, nome, password, admin);
     }
 
     @Override
@@ -238,6 +243,76 @@ public class RestauranteFacade implements InterRestauranteL {
     @Override
     public boolean ingredientesSuficientes(long idPedido, String postoId) {
         return this.preparacoes.ingredientesSuficientes(idPedido, postoId);
+    }
+
+    @Override
+    public void iniciarPedido(boolean tipoRestaurante) {
+        this.pedidos.iniciarPedido(tipoRestaurante);
+    }
+
+    @Override
+    public void adicionarProdutoPedido(String produtoId) {
+        this.pedidos.adicionarProdutoPedido(produtoId);
+    }
+
+    @Override
+    public void definirNotaPedido(String nota) {
+        this.pedidos.definirNotaPedido(nota);
+    }
+
+    @Override
+    public List<Produto> getProdutosPedidoEmConstrucao() {
+        return this.pedidos.getProdutosPedidoEmConstrucao();
+    }
+
+    @Override
+    public String getNotaPedidoEmConstrucao() {
+        return this.pedidos.getNotaPedidoEmConstrucao();
+    }
+
+    @Override
+    public List<String> getIdsPedidoEmConstrucao() {
+        return this.pedidos.getIdsPedidoEmConstrucao();
+    }
+
+    @Override
+    public long confirmarPedidoEmConstrucao() throws PedidoException {
+        return this.pedidos.confirmarPedidoEmConstrucao();
+    }
+
+    @Override
+    public void cancelarPedidoEmConstrucao() {
+        this.pedidos.cancelarPedidoEmConstrucao();
+    }
+
+    @Override
+    public List<Produto> getMenusDisponiveis() {
+        return this.pedidos.getMenusDisponiveis();
+    }
+
+    @Override
+    public List<Produto> getItensDisponiveis() {
+        return this.pedidos.getItensDisponiveis();
+    }
+
+    @Override
+    public List<String> getMenusIds() {
+        return this.pedidos.getMenusIds();
+    }
+
+    @Override
+    public List<String> getItensIds() {
+        return this.pedidos.getItensIds();
+    }
+
+    @Override
+    public String getNomeProduto(String idProduto) {
+        return this.pedidos.getNomeProduto(idProduto);
+    }
+
+    @Override
+    public boolean requisitarAlimento(String alimentoId, String postoId, int quantidade) {
+        return this.preparacoes.requisitarAlimento(alimentoId, postoId, quantidade);
     }
 
 }

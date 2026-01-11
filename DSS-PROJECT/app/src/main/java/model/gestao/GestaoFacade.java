@@ -3,15 +3,25 @@ package model.gestao;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import data.AlimentoDAO;
+import data.FuncionarioDAO;
 import data.PedidoDAO;
+import data.PostoDAO;
 import model.pedidos.Pedido;
+import model.preparacoes.Funcionario;
+import model.preparacoes.Perfil;
+import model.preparacoes.Posto;
 
 public class GestaoFacade implements InterGestaoL {
     private Map<String, Alimento> alimentos;
     private Map<Long, Pedido> pedidos; //Como temos DAO de Pedidos, podemos usar aqui para calcular tempos de confeção sem ter que passar o PedidosFacade como dependência
+    private ArrayList<String> mensagens;
+    private Map<String, Posto> postos;
+    private Map<Long, Funcionario> funcionarios;
+
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -19,6 +29,9 @@ public class GestaoFacade implements InterGestaoL {
     public GestaoFacade() {
         this.alimentos = AlimentoDAO.getInstance();
         this.pedidos = PedidoDAO.getInstance();
+        this.mensagens = new ArrayList<>();
+        this.postos = PostoDAO.getInstance();
+        this.funcionarios = FuncionarioDAO.getInstance();
     }
 
     // ====================================================================================================
@@ -82,12 +95,49 @@ public class GestaoFacade implements InterGestaoL {
 
     @Override
     public void enviaMensagem(String mensagem) {
-        // Placeholder para integração futura com sistema de mensagens
-        // (ex: fila de mensagens, email, push notification)
-        // Neste momento assume-se um único restaurante ativo.
-        if (mensagem == null || mensagem.isEmpty()) {
+        if (mensagem == null) {
             return;
         }
+        String msg = mensagem.trim();
+        if (msg.isEmpty()) {
+            return;
+        }
+        this.mensagens.add(msg);
+    }
+
+    @Override
+    public List<String> getMensagens() {
+        return new ArrayList<>(this.mensagens);
+    }
+
+    @Override
+    public List<String> getPostosLivres() {
+        List<String> livres = new ArrayList<>();
+        for (Posto posto : this.postos.values()) {
+            if (posto != null && posto.estaLivre()) {
+                livres.add(posto.getId());
+            }
+        }
+        return livres;
+    }
+
+    @Override
+    public void registaFuncionario(long id, String nome, String password, boolean admin) {
+        Perfil perfil = admin ? Perfil.ADMIN : Perfil.NORMAL;
+        Funcionario f = new Funcionario(id, nome, password, perfil);
+        this.funcionarios.put(id, f);
+    }
+
+    @Override
+    public boolean autenticaFuncionario(long id, String password) {
+        Funcionario f = this.funcionarios.get(id);
+        return f != null && f.getPassword().equals(password);
+    }
+
+    @Override
+    public boolean funcionarioEAdmin(long id) {
+        Funcionario f = this.funcionarios.get(id);
+        return f != null && f.isAdmin();
     }
 
     // ====================================================================================================

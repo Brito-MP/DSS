@@ -32,4 +32,30 @@ public interface InterPedidoL {
     List<Pedido> getPedidosConcluidos();
 
     List<Long> getPedidosConcluidosIds();
+
+    void iniciarPedido(boolean tipoRestaurante);
+
+    void adicionarProdutoPedido(String produtoId);
+
+    void definirNotaPedido(String nota);
+
+    List<Produto> getProdutosPedidoEmConstrucao();
+
+    String getNotaPedidoEmConstrucao();
+
+    long confirmarPedidoEmConstrucao() throws PedidoException;
+
+    List<String> getIdsPedidoEmConstrucao();
+
+    void cancelarPedidoEmConstrucao();
+
+    List<Produto> getMenusDisponiveis();
+
+    List<Produto> getItensDisponiveis();
+
+    List<String> getMenusIds();
+
+    List<String> getItensIds();
+
+    String getNomeProduto(String idProduto);
 }

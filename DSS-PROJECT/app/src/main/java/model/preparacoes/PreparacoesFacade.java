@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import data.AlimentoDAO;
-import data.FuncionarioDAO;
 import data.PedidoDAO;
 import data.PostoDAO;
 import model.gestao.Alimento;
@@ -19,7 +18,6 @@ public class PreparacoesFacade implements InterPreparacoesL {
 
     private List<Long> filaPedidos;
     private Map<String, Posto> postos; // idPosto -> Posto
-    private final Map<Long, Funcionario> funcionarios; // idFuncionario-> Funcionario
     private Map<Long, Pedido> pedidos; // idPedido -> Pedido  // Em vez de tar sempre a pedir os pedidos ao facade acedemos pelo DAO
     private Map<String, Alimento> alimentos; // idAlimento -> Alimento // Em vez de tar sempre a pedir os alimentos ao facade acedemos pelo DAO
 
@@ -31,7 +29,6 @@ public class PreparacoesFacade implements InterPreparacoesL {
         this.pedidos = PedidoDAO.getInstance();
         this.alimentos = AlimentoDAO.getInstance();
         this.filaPedidos = new ArrayList<>();
-        this.funcionarios = FuncionarioDAO.getInstance();
     }
 
     @Override
@@ -212,31 +209,8 @@ public class PreparacoesFacade implements InterPreparacoesL {
     }
 
     @Override
-    public boolean autenticaFuncionario(long id, String password) {
-        Funcionario f = this.funcionarios.get(id);
-        return f != null && f.getPassword().equals(password);
-    }
-
-    @Override
-    public boolean funcionarioEAdmin(long id) {
-        Funcionario f = this.funcionarios.get(id);
-        return f != null && f.isAdmin();
-    }
-
-    @Override
     public boolean postoExiste(String postoId) {
         return this.postos.containsKey(postoId);
-    }
-
-    @Override
-    public List<String> getPostosLivres() {
-        List<String> livres = new ArrayList<>();
-        for (Posto posto : this.postos.values()) {
-            if (posto != null && posto.estaLivre()) {
-                livres.add(posto.getId());
-            }
-        }
-        return livres;
     }
 
     @Override
@@ -266,13 +240,6 @@ public class PreparacoesFacade implements InterPreparacoesL {
                 this.postos.put(posto.getId(), posto); 
             }
         }
-    }
-
-    @Override
-    public void registaFuncionario(long id, String nome, String password, boolean admin) {
-        Perfil perfil = admin ? Perfil.ADMIN : Perfil.NORMAL;
-        Funcionario f = new Funcionario(id, nome, password, perfil);
-        this.funcionarios.put(id, f);
     }
 
     @Override
@@ -328,6 +295,32 @@ public class PreparacoesFacade implements InterPreparacoesL {
                 return false;
             }
         }
+        return true;
+    }
+
+    @Override
+    public boolean requisitarAlimento(String alimentoId, String postoId, int quantidade) {
+        if (quantidade <= 0) {
+            return false;
+        }
+        Posto posto = this.postos.get(postoId);
+        Alimento stockGlobal = this.alimentos.get(alimentoId);
+
+        if (posto == null || stockGlobal == null) {
+            return false;
+        }
+
+        int disponivel = stockGlobal.getQuantidade();
+        int aMover = Math.min(quantidade, disponivel);
+        if (aMover <= 0) {
+            return false;
+        }
+
+        Map<String, Integer> stockPosto = posto.getQuantidadeAlimento();
+        int atual = stockPosto.getOrDefault(alimentoId, 0);
+        stockPosto.put(alimentoId, atual + aMover);
+        this.alimentos.put(alimentoId, new Alimento(disponivel - aMover, stockGlobal.getId(), stockGlobal.getNome()));
+        this.postos.put(postoId, posto);
         return true;
     }
 

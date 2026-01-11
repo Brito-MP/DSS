@@ -24,6 +24,8 @@ public interface InterRestauranteL {
 
         public void enviaMensagem(String mensagem);
 
+        public List<String> getMensagens();
+
         public void entregarPedido(long idPedido);
 
         public String geraFatura(long idPedido);
@@ -79,5 +81,33 @@ public interface InterRestauranteL {
     public String getPostoDeFuncionario(long funcionarioId);
 
     public boolean ingredientesSuficientes(long idPedido, String postoId);
+
+    public void iniciarPedido(boolean tipoRestaurante);
+
+    public void adicionarProdutoPedido(String produtoId);
+
+    public void definirNotaPedido(String nota);
+
+    public List<Produto> getProdutosPedidoEmConstrucao();
+
+    public String getNotaPedidoEmConstrucao();
+
+    public long confirmarPedidoEmConstrucao() throws PedidoException;
+
+    public List<String> getIdsPedidoEmConstrucao();
+
+    public void cancelarPedidoEmConstrucao();
+
+    public List<Produto> getMenusDisponiveis();
+
+    public List<Produto> getItensDisponiveis();
+
+    public List<String> getMenusIds();
+
+    public List<String> getItensIds();
+
+    public String getNomeProduto(String idProduto);
+
+    public boolean requisitarAlimento(String alimentoId, String postoId, int quantidade);
 
 }

@@ -23,12 +23,6 @@ public class App {
     // ========== ATRIBUTOS ==========
     private InterRestauranteL model;
     private Scanner scanner;
-    private String[] menus = { "menubigmac", "menumcchicken" };
-    private String[] itens = { "BigMac", "mcchicken", "batataFrita", "coca_cola", "sumol" };
-    private List<String> produtos_escolhidos = new ArrayList<>();
-    private String nota = "";
-    private long idPedido = -1;
-
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
         
@@ -183,7 +177,7 @@ public class App {
                     break;
             }
         });
-        menu.setHandler(2, this::displayPainelPedidos);
+        menu.setHandler(2, () -> displayPainelPedidos());
         menu.setHandler(3, () -> model.libertarPostoDeFuncionario(funcionarioId));
 
         menu.run();
@@ -209,7 +203,8 @@ public class App {
                 "Ver Tempo Médio de Confecção",
                 "Ver Stock de Alimentos",
                 "Ver Postos Livres",
-                "Registar Funcionário"
+                "Registar Funcionário",
+                "Enviar mensagem"
         });
 
         menu.setHandler(1, () -> {
@@ -226,6 +221,7 @@ public class App {
 
         menu.setHandler(3, () -> displayPostosLivres());
         menu.setHandler(4, () -> registarFuncionario());
+        menu.setHandler(5, this::enviarMensagemGerente);
 
         menu.run();
     }
@@ -266,13 +262,14 @@ public class App {
             System.out.println();
         }
 
-        String[] opcoes = new String[pendentes.size()];
+        String[] opcoes = new String[pendentes.size() + 1];
         for (int i = 0; i < pendentes.size(); i++) {
             Pedido pedido = pendentes.get(i);
             String tipo = pedido.getTipo() ? "Restaurante" : "TakeAway";
             opcoes[i] = "Pedido #" + pedido.getIdCounter() + " | " + tipo + " | €"
                     + String.format("%.2f", pedido.getPreco());
         }
+        opcoes[pendentes.size()] = "Ver mensagens do gerente";
 
         NewMenu menu = new NewMenu(opcoes);
 
@@ -284,6 +281,7 @@ public class App {
                 System.out.println("✓ Pagamento validado para o pedido " + pedidoSelecionado.getIdCounter() + ".");
             });
         }
+        menu.setHandler(pendentes.size() + 1, this::displayMensagensGerente);
 
         menu.run();
     }
@@ -292,17 +290,21 @@ public class App {
 
         NewMenu menu = new NewMenu(new String[] {
                 "Pedidos em preparação",
-                "Requisitar ingredientes",
                 "Iniciar execução de pedido",
+                "Encerrar pedido",
+                "Requisitar ingredientes",
+                "Requisitar ingrediente (extras)",
                 "Atrasar pedido e atualizar fila",
-                "Encerrar pedido"
+                "Mensagens do gerente"
         });
 
         menu.setHandler(1, () -> displayPedidosEmPreparacao());
-        menu.setHandler(2, () -> requisitarIngredientes());
-        menu.setHandler(3, () -> iniciarExecucaoPedido());
-        menu.setHandler(4, () -> atrasarPedidoEAtualizarFila());
-        menu.setHandler(5, () -> encerrarPedido());
+        menu.setHandler(2, () -> iniciarExecucaoPedido());
+        menu.setHandler(3, () -> encerrarPedido());
+        menu.setHandler(4, () -> requisitarIngredientes());
+        menu.setHandler(5, () -> requisitarIngredienteManual());
+        menu.setHandler(6, () -> atrasarPedidoEAtualizarFila());
+        menu.setHandler(7, () ->displayMensagensGerente());
 
         menu.run();
     }
@@ -316,11 +318,12 @@ public class App {
                 return;
             }
 
-            String[] opcoes = new String[concluidos.size()];
+            String[] opcoes = new String[concluidos.size() + 1];
             for (int i = 0; i < concluidos.size(); i++) {
                 Long id = concluidos.get(i);
                 opcoes[i] = "Pedido #" + id;
             }
+            opcoes[concluidos.size()] = "Ver mensagens do gerente";
 
             final long[] entregue = { -1 };
             NewMenu menu = new NewMenu(opcoes);
@@ -334,6 +337,7 @@ public class App {
                     System.out.println("✓ Pedido " + idPedido + " marcado como entregue.");
                 });
             }
+            menu.setHandler(concluidos.size() + 1, () -> displayMensagensGerente());
 
             menu.runOnce();
 
@@ -375,7 +379,7 @@ public class App {
     private boolean takeAway() {
         boolean[] concluido = { false };
         boolean[] pagou = { false };
-        limparPedidoAtual();
+        model.iniciarPedido(false);
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
@@ -393,28 +397,30 @@ public class App {
             menu.setHandler(2, () -> displayMenus());
             menu.setHandler(3, () -> displayItens());
             menu.setHandler(4, () -> displayPedido());
-            menu.setHandler(5, () -> {
-                nota = adicionaNota();
-            });
+            menu.setHandler(5, this::adicionaNota);
             menu.setHandler(6, () -> {
-                idPedido = model.registaPedido(produtos_escolhidos, nota, false);
-                boolean pagamento = menuTrocasItem(idPedido);
-                if (pagamento) {
-                    pagou[0] = true;
-                    concluido[0] = true;
-                    limparPedidoAtual();
+                try {
+                    long idPedido = model.confirmarPedidoEmConstrucao();
+                    boolean pagamento = menuTrocasItem(idPedido);
+                    if (pagamento) {
+                        pagou[0] = true;
+                        concluido[0] = true;
+                    }
+                } catch (PedidoException e) {
+                    System.out.println("✗ Não foi possível registar o pedido: " + e.getMessage());
                 }
             });
 
             menu.runOnce();
         }
+        model.cancelarPedidoEmConstrucao();
         return pagou[0];
     }
 
     private boolean restaurante() {
         boolean[] concluido = { false };
         boolean[] pagou = { false };
-        limparPedidoAtual();
+        model.iniciarPedido(true);
 
         while (!concluido[0]) {
             NewMenu menu = new NewMenu(new String[] {
@@ -430,51 +436,67 @@ public class App {
             menu.setHandler(2, () -> displayMenus());
             menu.setHandler(3, () -> displayItens());
             menu.setHandler(4, () -> displayPedido());
-            menu.setHandler(5, () -> {
-                nota = adicionaNota();
-            });
+            menu.setHandler(5, this::adicionaNota);
             menu.setHandler(6, () -> {
-                idPedido = model.registaPedido(produtos_escolhidos, nota, true);
-                boolean pagamento = menuTrocasItem(idPedido);
-                if (pagamento) {
-                    pagou[0] = true;
-                    concluido[0] = true;
-                    limparPedidoAtual();
+                try {
+                    long idPedido = model.confirmarPedidoEmConstrucao();
+                    boolean pagamento = menuTrocasItem(idPedido);
+                    if (pagamento) {
+                        pagou[0] = true;
+                        concluido[0] = true;
+                    }
+                } catch (PedidoException e) {
+                    System.out.println("✗ Não foi possível registar o pedido: " + e.getMessage());
                 }
             });
 
             menu.runOnce();
         }
+        model.cancelarPedidoEmConstrucao();
         return pagou[0];
     }
 
     // ========== DISPLAY DE MENUS E ITENS ==========
     private void displayMenus() {
-        NewMenu menu = new NewMenu(new String[] {
-                "Menu BigMac",
-                "Menu McChicken"
-        });
+        List<String> menusDisponiveis = model.getMenusIds();
+        if (menusDisponiveis.isEmpty()) {
+            System.out.println("Nenhum menu disponível.");
+            return;
+        }
 
-        menu.setHandler(1, () -> addEscolhidos(menus[0]));
-        menu.setHandler(2, () -> addEscolhidos(menus[1]));
+        String[] opcoes = new String[menusDisponiveis.size()];
+        for (int i = 0; i < menusDisponiveis.size(); i++) {
+            String id = menusDisponiveis.get(i);
+            opcoes[i] = model.getNomeProduto(id) + " (" + id + ")";
+        }
+
+        NewMenu menu = new NewMenu(opcoes);
+        for (int i = 0; i < menusDisponiveis.size(); i++) {
+            final int idx = i;
+            menu.setHandler(i + 1, () -> addEscolhidos(menusDisponiveis.get(idx)));
+        }
 
         menu.run();
     }
 
     private void displayItens() {
-        NewMenu menu = new NewMenu(new String[] {
-                "BigMac",
-                "McChicken",
-                "Batata Frita",
-                "Coca Cola",
-                "Sumol"
-        });
+        List<String> itensDisponiveis = model.getItensIds();
+        if (itensDisponiveis.isEmpty()) {
+            System.out.println("Nenhum item disponível.");
+            return;
+        }
 
-        menu.setHandler(1, () -> addEscolhidos(itens[0]));
-        menu.setHandler(2, () -> addEscolhidos(itens[1]));
-        menu.setHandler(3, () -> addEscolhidos(itens[2]));
-        menu.setHandler(4, () -> addEscolhidos(itens[3]));
-        menu.setHandler(5, () -> addEscolhidos(itens[4]));
+        String[] opcoes = new String[itensDisponiveis.size()];
+        for (int i = 0; i < itensDisponiveis.size(); i++) {
+            String id = itensDisponiveis.get(i);
+            opcoes[i] = model.getNomeProduto(id) + " (" + id + ")";
+        }
+
+        NewMenu menu = new NewMenu(opcoes);
+        for (int i = 0; i < itensDisponiveis.size(); i++) {
+            final int idx = i;
+            menu.setHandler(i + 1, () -> addEscolhidos(itensDisponiveis.get(idx)));
+        }
 
         menu.run();
     }
@@ -750,27 +772,24 @@ public class App {
 
     // ========== GESTÃO DE PEDIDO ==========
     private void addEscolhidos(String item) {
-        produtos_escolhidos.add(item);
+        model.adicionarProdutoPedido(item);
         System.out.println("✓ " + item + " adicionado ao pedido!");
-    }
-
-    private void limparPedidoAtual() {
-        produtos_escolhidos.clear();
-        nota = "";
-        idPedido = -1;
     }
 
     private void displayPedido() {
         System.out.println("\n========== PEDIDO ==========");
-        if (produtos_escolhidos.isEmpty()) {
+        List<String> produtosIds = model.getIdsPedidoEmConstrucao();
+        if (produtosIds.isEmpty()) {
             System.out.println("Nenhum item adicionado ao pedido!");
         } else {
             System.out.println("Itens do pedido:");
-            for (int i = 0; i < produtos_escolhidos.size(); i++) {
-                System.out.println((i + 1) + ". " + produtos_escolhidos.get(i));
+            for (int i = 0; i < produtosIds.size(); i++) {
+                String id = produtosIds.get(i);
+                System.out.println((i + 1) + ". " + model.getNomeProduto(id) + " (" + id + ")");
             }
         }
-        System.out.println("Nota: " + nota + "\n");
+        String notaAtual = model.getNotaPedidoEmConstrucao();
+        System.out.println("Nota: " + notaAtual + "\n");
     }
 
     private void displayPedidosConcluidos() {
@@ -886,7 +905,7 @@ public class App {
         }
 
         model.requisitarIngredientes(idPedido, postoId);
-        System.out.println("✓ Ingredientes requisitados para o pedido " + idPedido + " no posto " + postoId + ".");
+            System.out.println("✓ Ingredientes requisitados para o pedido " + idPedido + " no posto " + postoId + ".");
 
         System.out.print("Tempo de atraso (ex: 2.5, Enter para nenhum): ");
         String atrasoInput = scanner.nextLine().trim();
@@ -906,6 +925,66 @@ public class App {
             } catch (NumberFormatException e) {
                 System.out.println("Valor de atraso inválido, ignorando atraso.");
             }
+        }
+    }
+
+    private void requisitarIngredienteManual() {
+        System.out.print("ID do posto: ");
+        String postoId = scanner.nextLine().trim();
+        if (postoId.isEmpty()) {
+            System.out.println("ID do posto inválido.");
+            return;
+        }
+
+        Map<String, Integer> stock = model.apresentaStock();
+        if (stock == null || stock.isEmpty()) {
+            System.out.println("✗ Não há alimentos em stock global.");
+            return;
+        }
+
+        List<String> alimentosIds = new ArrayList<>(stock.keySet());
+        String[] opcoes = new String[alimentosIds.size() + 1];
+        for (int i = 0; i < alimentosIds.size(); i++) {
+            String id = alimentosIds.get(i);
+            String nome = model.getAlimento(id) != null ? model.getAlimento(id).getNome() : id;
+            int qtd = stock.getOrDefault(id, 0);
+            opcoes[i] = nome + " (" + id + ") | Stock: " + qtd;
+        }
+        opcoes[alimentosIds.size()] = "Voltar";
+
+        final String[] escolhido = { null };
+        NewMenu menuAlimentos = new NewMenu(opcoes);
+        for (int i = 0; i < alimentosIds.size(); i++) {
+            final int idx = i;
+            menuAlimentos.setHandler(i + 1, () -> escolhido[0] = alimentosIds.get(idx));
+        }
+        menuAlimentos.setHandler(alimentosIds.size() + 1, () -> escolhido[0] = null);
+
+        menuAlimentos.runOnce();
+
+        if (escolhido[0] == null) {
+            System.out.println("A sair da requisição manual.");
+            return;
+        }
+        String alimentoId = escolhido[0];
+
+        System.out.print("Quantidade a requisitar (default 1): ");
+        String qtdInput = scanner.nextLine().trim();
+        int qtd = 1;
+        if (!qtdInput.isEmpty()) {
+            try {
+                qtd = Integer.parseInt(qtdInput);
+            } catch (NumberFormatException e) {
+                System.out.println("Quantidade inválida, usando 1.");
+                qtd = 1;
+            }
+        }
+
+        boolean ok = model.requisitarAlimento(alimentoId, postoId, qtd);
+        if (ok) {
+            System.out.println("✓ Requisitado " + qtd + " de " + alimentoId + " para o posto " + postoId + ".");
+        } else {
+            System.out.println("✗ Não foi possível requisitar " + alimentoId + " (stock global insuficiente ou IDs inválidos).");
         }
     }
 
@@ -975,11 +1054,31 @@ public class App {
         System.out.println("✓ Pedido " + idPedido + " encerrado no posto " + postoId + ".");
     }
 
-    private String adicionaNota() {
+    private void displayMensagensGerente() {
+        List<String> msgs = model.getMensagens();
+        System.out.println("\n===== MENSAGENS DO GERENTE =====");
+        if (msgs == null || msgs.isEmpty()) {
+            System.out.println("Nenhuma mensagem.\n");
+            return;
+        }
+        for (int i = 0; i < msgs.size(); i++) {
+            System.out.println((i + 1) + ". " + msgs.get(i));
+        }
+        System.out.println();
+    }
+
+    private void enviarMensagemGerente() {
+        System.out.print("Mensagem para os funcionários: ");
+        String msg = scanner.nextLine();
+        model.enviaMensagem(msg);
+        System.out.println("✓ Mensagem enviada.");
+    }
+
+    private void adicionaNota() {
         System.out.print("Insira a nota para o pedido: ");
-        this.nota = scanner.nextLine();
+        String nota = scanner.nextLine();
+        model.definirNotaPedido(nota);
         System.out.println("✓ Nota adicionada: " + nota);
-        return nota;
     }
 
     private void displayTrocasProduto() {
