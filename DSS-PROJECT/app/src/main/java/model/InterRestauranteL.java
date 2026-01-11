@@ -11,48 +11,54 @@ import model.preparacoes.TipoPosto;
 
 public interface InterRestauranteL {
 
-    public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo); // return codigoPedidoRegistado
+        public long registaPedido(List<String> codigoProdutos, String nota, boolean tipo);
 
-    public void validaPagamento(long idPedido); // Precisamos de uma classe Pagamento ?? Não podemos usar este método
-    // tanto para pagar MBWay como para pagar balcão??
+        public void validaPagamento(long idPedido);
 
-    public boolean registaTroca(long idPedido, String idProduto, String idAlimentoAtual, String idAlimentoDesejado)
-            throws PedidoException;
+        public boolean registaTroca(long idPedido, String idProduto, String idAlimentoAtual, String idAlimentoDesejado)
+                        throws PedidoException;
 
-    public List<Produto> getProdutosPedido(long idPedido);
+        public double apresentaTempoConfecao();
 
-    public Map<String, Alimento> getAlimentosItem(long idPedido, String idProduto) throws PedidoException;
+        public Map<String, Integer> apresentaStock();
 
-    public double apresentaTempoConfecao();
+        public void enviaMensagem(String mensagem);
 
-    public Map<String, Integer> apresentaStock();
+        public void entregarPedido(long idPedido);
 
-    public void enviaMensagem(String mensagem);
-    
-    public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
-            throws PedidoException;
+        public String geraFatura(long idPedido);
 
-    public void entregarPedido(long idPedido);
+        public Alimento getAlimento(String idAlimento);
 
-    public void encerrarPedido(long idPedido, String postoId);
+        public boolean registaTrocaEmItemDoMenu(long idPedido, String idItemNoMenu, String idAlimentoAtual,
+                        String idAlimentoDesejado) throws PedidoException;
 
-    public void removerPedidoFila(long idPedido, List<Long> filaPedidos);
+        public void encerrarPedido(long idPedido, String postoId);
 
-    public void requisitarIngredientes(long idPedido, String idPosto);
+        public void removerPedidoFila(long idPedido, List<Long> filaPedidos);
 
-    public void atrasarPedido(long idPedido, double tempoAtraso);
+        public void requisitarIngredientes(long idPedido, String idPosto);
 
-    public void atualizaFilaPedidos(long idPedido, List<Long> filaPedidos);
+        public void atrasarPedido(long idPedido, double tempoAtraso);
 
-    public List<Pedido> getPedidosPorPagar();
+        public void atualizaFilaPedidos(long idPedido, List<Long> filaPedidos);
 
-    public List<Pedido> getPedidosEmPreparacao();
+        public List<Pedido> getPedidosPorPagar();
+
+        public List<Pedido> getPedidosEmPreparacao();
 
     public List<Pedido> getPedidosConcluidos();
 
     public List<Long> getPedidosConcluidosIds();
 
-    public List<Long> getFilaPedidos();
+        public List<Long> getFilaPedidos();
+
+        public List<String> getSubstitutosDisponiveis(long idPedido, String idProduto, String idAlimentoAtual)
+                        throws PedidoException;
+
+        public List<Produto> getProdutosPedido(long idPedido);
+
+        public Map<String, Alimento> getAlimentosItem(long idPedido, String idProduto) throws PedidoException;
 
     public boolean autenticaFuncionario(long id, String password);
 

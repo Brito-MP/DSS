@@ -9,13 +9,10 @@ public class Pedido {
     private static long IdCounter;
     private long idInstance;
     private double tempoConfecaoEsperado;
-    private double tempoConfecaoReal; // vai ser incrementado pelo funcionario se houver atraso
-    // private TalaoPagamento talaoPagamento; acho que n é necessario, o toString
-    // faz isto
-    private String nota; // ?? metemos List para suportar varias notas ??
+    private double tempoConfecaoReal; 
+    private String nota;
     private List<Produto> produtos;
-    private Estado estado; // PorPagar (nao sei se e necessario este estado porque o pedido nao entra na BD
-                           // antes de ser pago), EmPreparacao, Concluido, Entregue
+    private Estado estado;
     private double preco;
     private boolean tipo; // true -> restaurante; false -> takeaway
 
@@ -123,6 +120,10 @@ public class Pedido {
         return this.produtos;
     }
 
+    public void setPedidoEntregue() {
+        this.estado = Estado.Entregue;
+    }
+
     // ====================================================================================================
     // MÉTODOS
     // ====================================================================================================
@@ -145,10 +146,6 @@ public class Pedido {
             }
         }
         throw new PedidoException("Produto " + idProduto + " não encontrado neste pedido");
-    }
-
-    public void setPedidoEntregue() {
-        this.estado = Estado.Entregue;
     }
 
     // ====================================================================================================

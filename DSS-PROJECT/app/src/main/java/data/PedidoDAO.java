@@ -148,17 +148,13 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     + "PedidoId BIGINT NOT NULL,"
                     + "ProdutoId VARCHAR(50) NOT NULL,"
                     + "Sequencia INT NOT NULL,"
+                    + "ItemId VARCHAR(50) NOT NULL,"
                     + "AlimentoId VARCHAR(50) NOT NULL,"
-                    + "PRIMARY KEY(PedidoId, ProdutoId, Sequencia, AlimentoId),"
+                    + "PRIMARY KEY(PedidoId, ProdutoId, Sequencia, ItemId, AlimentoId),"
                     + "FOREIGN KEY(PedidoId, ProdutoId, Sequencia) REFERENCES pedido_produtos(PedidoId, ProdutoId, Sequencia) ON DELETE CASCADE,"
+                    + "FOREIGN KEY(ItemId) REFERENCES produtos(Id) ON DELETE CASCADE,"
                     + "FOREIGN KEY(AlimentoId) REFERENCES alimentos(Id) ON DELETE CASCADE)";
             stm.executeUpdate(sql);
-
-            // Inicializar produtos e relações via utilitiesDAO
-            try (Connection connInit = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME,
-                    DAOconfig.PASSWORD)) {
-                utilitiesDAO.inicializarBaseDados(connInit);
-            }
 
             // Inicializar o IdCounter do Pedido com o maior ID da base de dados
             try (Statement stmCounter = conn.createStatement(); ResultSet rsCounter = stmCounter.executeQuery("SELECT COALESCE(MAX(Id), 0) + 1 FROM pedidos")) {
@@ -284,8 +280,14 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     // Garante a composição: cada pedido tem seus próprios alimentos por produto
                     if (produto != null && produto instanceof Item) {
                         Item item = (Item) produto;
-                        carregaAlimentosPedido(item, pedidoId, sequencia, conn);
+                        carregaAlimentosPedido(item, pedidoId, sequencia, item.getId(), conn);
                         produtos.add(item);
+                    } else if (produto != null && produto instanceof Menu) {
+                        Menu menu = (Menu) produto;
+                        for (Item item : menu.getItens()) {
+                            carregaAlimentosPedido(item, pedidoId, sequencia, menu.getId(), conn);
+                        }
+                        produtos.add(menu);
                     } else if (produto != null) {
                         produtos.add(produto);
                     }
@@ -301,20 +303,28 @@ public class PedidoDAO implements Map<Long, Pedido> {
      * alimentos por produto Exemplo: Pedido 1 BigMac com carne_frango, Pedido 2
      * BigMac com carne_vaca
      */
-    private void carregaAlimentosPedido(Item item, Long pedidoId, int sequencia, Connection conn) throws SQLException {
+    private void carregaAlimentosPedido(Item item, Long pedidoId, int sequencia, String produtoId, Connection conn)
+            throws SQLException {
         try (PreparedStatement pstm = conn.prepareStatement(
-                "SELECT AlimentoId FROM pedido_produto_alimentos WHERE PedidoId=? AND ProdutoId=? AND Sequencia=?")) {
+                "SELECT AlimentoId FROM pedido_produto_alimentos WHERE PedidoId=? AND ProdutoId=? AND Sequencia=? AND ItemId=?")) {
             pstm.setLong(1, pedidoId);
-            pstm.setString(2, item.getId());
+            pstm.setString(2, produtoId);
             pstm.setInt(3, sequencia);
+            pstm.setString(4, item.getId());
             try (ResultSet rs = pstm.executeQuery()) {
-                item.getAlimentos().clear(); // Limpar alimentos padrão
+                boolean encontrou = false;
+                Map<String, Alimento> alimentosNovos = new HashMap<>();
                 while (rs.next()) {
                     String alimentoId = rs.getString("AlimentoId");
                     Alimento alimento = AlimentoDAO.getInstance().get(alimentoId);
                     if (alimento != null) {
-                        item.getAlimentos().put(alimentoId, alimento);
+                        alimentosNovos.put(alimentoId, alimento);
+                        encontrou = true;
                     }
+                }
+                if (encontrou) {
+                    item.getAlimentos().clear(); // Substituir composição só quando há dados do pedido
+                    item.getAlimentos().putAll(alimentosNovos);
                 }
             }
         }
@@ -565,12 +575,13 @@ public class PedidoDAO implements Map<Long, Pedido> {
                 if (produto instanceof Item) {
                     Item item = (Item) produto;
                     try (PreparedStatement pstmAlimentos = conn.prepareStatement(
-                            "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, AlimentoId) VALUES (?, ?, ?, ?)")) {
+                            "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, ItemId, AlimentoId) VALUES (?, ?, ?, ?, ?)")) {
                         for (String alimentoId : item.getAlimentos().keySet()) {
                             pstmAlimentos.setLong(1, p.getIdCounter());
                             pstmAlimentos.setString(2, produto.getId());
                             pstmAlimentos.setInt(3, sequencia);
-                            pstmAlimentos.setString(4, alimentoId);
+                            pstmAlimentos.setString(4, item.getId());
+                            pstmAlimentos.setString(5, alimentoId);
                             pstmAlimentos.executeUpdate();
                         }
                     }
@@ -579,12 +590,13 @@ public class PedidoDAO implements Map<Long, Pedido> {
                     // Para cada item do menu, salvar seus alimentos usando o ID do Menu
                     for (Item item : menu.getItens()) {
                         try (PreparedStatement pstmAlimentos = conn.prepareStatement(
-                                "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, AlimentoId) VALUES (?, ?, ?, ?)")) {
+                                "INSERT INTO pedido_produto_alimentos (PedidoId, ProdutoId, Sequencia, ItemId, AlimentoId) VALUES (?, ?, ?, ?, ?)")) {
                             for (String alimentoId : item.getAlimentos().keySet()) {
                                 pstmAlimentos.setLong(1, p.getIdCounter());
-                                pstmAlimentos.setString(2, produto.getId()); // USA O ID DO MENU, NÃO DO ITEM
+                                pstmAlimentos.setString(2, produto.getId()); // ProdutoId é o MENU do pedido
                                 pstmAlimentos.setInt(3, sequencia);
-                                pstmAlimentos.setString(4, alimentoId);
+                                pstmAlimentos.setString(4, item.getId());
+                                pstmAlimentos.setString(5, alimentoId);
                                 pstmAlimentos.executeUpdate();
                             }
                         }

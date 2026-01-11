@@ -10,8 +10,8 @@ import data.PedidoDAO;
 import model.pedidos.Pedido;
 
 public class GestaoFacade implements InterGestaoL {
-    Map<String, Alimento> alimentos;
-    Map<Long, Pedido> pedidos;
+    private Map<String, Alimento> alimentos;
+    private Map<Long, Pedido> pedidos; //Como temos DAO de Pedidos, podemos usar aqui para calcular tempos de confeção sem ter que passar o PedidosFacade como dependência
 
     // ====================================================================================================
     // CONSTRUTORES
