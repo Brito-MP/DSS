@@ -18,6 +18,7 @@ public class utilitiesDAO {
         inicializarMenus(conn);
         inicializarTrocas(conn);
         inicializarPostos(conn);
+        inicializarFuncionarios(conn);
     }
 
     private static void inicializarPostos(Connection conn) throws SQLException {
@@ -116,6 +117,45 @@ public class utilitiesDAO {
 
                 pstm.close();
                 System.out.println("✓ Alimentos inicializados com sucesso!\n");
+            }
+        }
+    }
+
+    private static void inicializarFuncionarios(Connection conn) throws SQLException {
+        // Garantir tabela de funcionários (caso FuncionarioDAO ainda não tenha sido carregado)
+        try (Statement stm = conn.createStatement()) {
+            stm.executeUpdate("CREATE TABLE IF NOT EXISTS funcionarios ("
+                    + "Id BIGINT NOT NULL PRIMARY KEY,"
+                    + "Nome VARCHAR(100) NOT NULL,"
+                    + "Password VARCHAR(100) NOT NULL,"
+                    + "Perfil VARCHAR(20) NOT NULL)");
+        }
+
+        try (Statement stm = conn.createStatement(); ResultSet rs = stm.executeQuery("SELECT COUNT(*) FROM funcionarios")) {
+            if (rs.next() && rs.getInt(1) == 0) {
+                System.out.println("→ Inicializando funcionários...");
+
+                PreparedStatement pstm = conn.prepareStatement(
+                        "INSERT INTO funcionarios (Id, Nome, Password, Perfil) VALUES (?, ?, ?, ?)");
+
+                Object[][] funcionarios = {
+                    {1L, "goncalo", "goncalo", "ADMIN"},
+                    {2L, "simao", "simao", "NORMAL"},
+                    {3L, "henrique", "henrique", "NORMAL"},
+                    {4L, "ze", "ze", "NORMAL"},
+                    {5L, "beatriz", "beatriz", "NORMAL"}
+                };
+
+                for (Object[] f : funcionarios) {
+                    pstm.setLong(1, (Long) f[0]);
+                    pstm.setString(2, (String) f[1]);
+                    pstm.setString(3, (String) f[2]);
+                    pstm.setString(4, (String) f[3]);
+                    pstm.executeUpdate();
+                }
+
+                pstm.close();
+                System.out.println("✓ Funcionários inicializados com sucesso!\n");
             }
         }
     }
