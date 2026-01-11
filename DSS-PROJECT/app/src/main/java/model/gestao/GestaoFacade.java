@@ -47,7 +47,7 @@ public class GestaoFacade implements InterGestaoL {
     // ====================================================================================================
     @Override
     public double apresentaTempoConfecao() {
-        Collection<Pedido> todosPedidos = this.pedidos.values();
+        Collection<Pedido> todosPedidos = this.pedidos.values(); //this.pedidos.getpedidos() pedidos é facade
         double somaTempos = 0;
         int totalPedidos = 0;
         double media = 0;
