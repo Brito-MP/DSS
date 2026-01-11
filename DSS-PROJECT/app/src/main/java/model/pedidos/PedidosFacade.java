@@ -12,6 +12,9 @@ public class PedidosFacade implements InterPedidoL {
 
     private Map<String, Produto> produtos;
     private Map<Long, Pedido> pedidos;
+    private List<String> pedidoEmConstrucao;
+    private String notaEmConstrucao;
+    private Boolean tipoEmConstrucao;
 
     // ====================================================================================================
     // CONSTRUTORES
@@ -19,6 +22,9 @@ public class PedidosFacade implements InterPedidoL {
     public PedidosFacade() {
         this.pedidos = PedidoDAO.getInstance();
         this.produtos = ProdutoDAO.getInstance();
+        this.pedidoEmConstrucao = new ArrayList<>();
+        this.notaEmConstrucao = "";
+        this.tipoEmConstrucao = null;
     }
 
     // ====================================================================================================
@@ -136,6 +142,122 @@ public class PedidosFacade implements InterPedidoL {
         this.pedidos.put(pedido.getIdCounter(), pedido);
 
         return pedido.getIdCounter();
+    }
+
+    @Override
+    public void iniciarPedido(boolean tipoRestaurante) {
+        this.tipoEmConstrucao = tipoRestaurante;
+        this.pedidoEmConstrucao.clear();
+        this.notaEmConstrucao = "";
+    }
+
+    @Override
+    public void adicionarProdutoPedido(String produtoId) {
+        if (this.produtos.containsKey(produtoId)) {
+            this.pedidoEmConstrucao.add(produtoId);
+        }
+    }
+
+    @Override
+    public void definirNotaPedido(String nota) {
+        this.notaEmConstrucao = nota != null ? nota : "";
+    }
+
+    @Override
+    public List<Produto> getProdutosPedidoEmConstrucao() {
+        List<Produto> selecionados = new ArrayList<>();
+        for (String id : this.pedidoEmConstrucao) {
+            Produto p = this.produtos.get(id);
+            if (p != null) {
+                selecionados.add(p.clone());
+            }
+        }
+        return selecionados;
+    }
+
+    @Override
+    public String getNotaPedidoEmConstrucao() {
+        return this.notaEmConstrucao;
+    }
+
+    @Override
+    public List<String> getIdsPedidoEmConstrucao() {
+        return new ArrayList<>(this.pedidoEmConstrucao);
+    }
+
+    @Override
+    public long confirmarPedidoEmConstrucao() throws PedidoException {
+        if (this.tipoEmConstrucao == null) {
+            throw new PedidoException("Pedido não iniciado.");
+        }
+        if (this.pedidoEmConstrucao.isEmpty()) {
+            throw new PedidoException("Pedido sem produtos.");
+        }
+        long id = registaPedido(new ArrayList<>(this.pedidoEmConstrucao), this.notaEmConstrucao,
+                this.tipoEmConstrucao);
+        limparPedidoEmConstrucao();
+        return id;
+    }
+
+    @Override
+    public void cancelarPedidoEmConstrucao() {
+        limparPedidoEmConstrucao();
+    }
+
+    private void limparPedidoEmConstrucao() {
+        this.pedidoEmConstrucao.clear();
+        this.notaEmConstrucao = "";
+        this.tipoEmConstrucao = null;
+    }
+
+    @Override
+    public List<Produto> getMenusDisponiveis() {
+        List<Produto> menusDisponiveis = new ArrayList<>();
+        for (Produto p : this.produtos.values()) {
+            if (p instanceof Menu) {
+                menusDisponiveis.add(p.clone());
+            }
+        }
+        return menusDisponiveis;
+    }
+
+    @Override
+    public List<Produto> getItensDisponiveis() {
+        List<Produto> itensDisponiveis = new ArrayList<>();
+        for (Produto p : this.produtos.values()) {
+            if (p instanceof Item) {
+                itensDisponiveis.add(p.clone());
+            }
+        }
+        return itensDisponiveis;
+    }
+
+    @Override
+    public List<String> getMenusIds() {
+        List<String> ids = new ArrayList<>();
+        for (Produto p : this.produtos.values()) {
+            if (p instanceof Menu) {
+                ids.add(p.getId());
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    public List<String> getItensIds() {
+        List<String> ids = new ArrayList<>();
+        for (Produto p : this.produtos.values()) {
+            if (p instanceof Item) {
+                ids.add(p.getId());
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    public String getNomeProduto(String idProduto) {
+        Produto p = this.produtos.get(idProduto);
+        return p != null ? p.getNome() : idProduto;
     }
 
     @Override
