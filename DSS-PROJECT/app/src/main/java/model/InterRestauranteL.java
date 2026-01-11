@@ -76,4 +76,8 @@ public interface InterRestauranteL {
 
     public TipoPosto getTipoPosto(String postoId);
 
+    public String getPostoDeFuncionario(long funcionarioId);
+
+    public boolean ingredientesSuficientes(long idPedido, String postoId);
+
 }

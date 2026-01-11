@@ -24,7 +24,14 @@ public class utilitiesDAO {
     private static void inicializarPostos(Connection conn) throws SQLException {
         // Garantir tabelas (caso PostoDAO ainda não tenha sido carregado)
         try (Statement stm = conn.createStatement()) {
-            stm.executeUpdate("CREATE TABLE IF NOT EXISTS postos (Id VARCHAR(50) NOT NULL PRIMARY KEY)");
+            stm.executeUpdate("CREATE TABLE IF NOT EXISTS postos ("
+                    + "Id VARCHAR(50) NOT NULL PRIMARY KEY,"
+                    + "FuncionarioId BIGINT DEFAULT NULL,"
+                    + "Tipo VARCHAR(30) DEFAULT 'CAIXA'"
+                    + ")");
+            // Garantir colunas em esquemas antigos
+            stm.executeUpdate("ALTER TABLE postos ADD COLUMN IF NOT EXISTS FuncionarioId BIGINT DEFAULT NULL");
+            stm.executeUpdate("ALTER TABLE postos ADD COLUMN IF NOT EXISTS Tipo VARCHAR(30) DEFAULT 'CAIXA'");
             stm.executeUpdate(
                     "CREATE TABLE IF NOT EXISTS posto_alimentos ("
                     + "PostoId VARCHAR(50) NOT NULL,"
@@ -42,40 +49,96 @@ public class utilitiesDAO {
                 System.out.println("→ Inicializando postos...");
 
                 try (PreparedStatement insPosto = conn.prepareStatement(
-                        "INSERT INTO postos (Id) VALUES (?) ON DUPLICATE KEY UPDATE Id=VALUES(Id)"); PreparedStatement insStock = conn.prepareStatement(
+                        "INSERT INTO postos (Id, Tipo) VALUES (?, ?) ON DUPLICATE KEY UPDATE Tipo=VALUES(Tipo)"); PreparedStatement insStock = conn.prepareStatement(
                                 "INSERT INTO posto_alimentos (PostoId, AlimentoId, Quantidade) "
                                 + "VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE Quantidade=VALUES(Quantidade)")) {
 
+                    Object[][] postos = {
+                        {"postoA", "CAIXA"},
+                        {"postoB", "CAIXA"},
+                        {"cozinha1", "COZINHA"},
+                        {"cozinha2", "COZINHA"},
+                        {"cozinha3", "COZINHA"},
+                        {"embalador1", "EMBALADOR_EMPRATADOR"},
+                        {"embalador2", "EMBALADOR_EMPRATADOR"}
+                    };
+
                     // Posto A
-                    insPosto.setString(1, "postoA");
-                    insPosto.executeUpdate();
                     Object[][] stockA = {
                         {"carne_vaca", 10},
                         {"carne_frango", 10},
                         {"batata", 30},
                         {"alface", 10}
                     };
-                    for (Object[] s : stockA) {
-                        insStock.setString(1, "postoA");
-                        insStock.setString(2, (String) s[0]);
-                        insStock.setInt(3, (Integer) s[1]);
-                        insStock.executeUpdate();
-                    }
 
                     // Posto B
-                    insPosto.setString(1, "postoB");
-                    insPosto.executeUpdate();
                     Object[][] stockB = {
                         {"pao_normal", 20},
                         {"pao_brioche", 10},
                         {"cebola", 15},
                         {"tomate", 15}
                     };
-                    for (Object[] s : stockB) {
-                        insStock.setString(1, "postoB");
-                        insStock.setString(2, (String) s[0]);
-                        insStock.setInt(3, (Integer) s[1]);
-                        insStock.executeUpdate();
+
+                    Object[][] stockC1 = {
+                        {"carne_vaca", 12},
+                        {"carne_frango", 12},
+                        {"batata", 25},
+                        {"alface", 12},
+                        {"tomate", 12}
+                    };
+
+                    Object[][] stockC2 = {
+                        {"pao_normal", 20},
+                        {"pao_brioche", 15},
+                        {"cebola", 15},
+                        {"tomate", 15},
+                        {"bacon", 15}
+                    };
+
+                    Object[][] stockC3 = {
+                        {"batata", 20},
+                        {"nugget", 20},
+                        {"alface", 10},
+                        {"pao_normal", 10}
+                    };
+
+                    for (Object[] p : postos) {
+                        String postoId = (String) p[0];
+                        String tipo = (String) p[1];
+
+                        insPosto.setString(1, postoId);
+                        insPosto.setString(2, tipo);
+                        insPosto.executeUpdate();
+
+                        Object[][] stock = null;
+                        switch (postoId) {
+                            case "postoA":
+                                stock = stockA;
+                                break;
+                            case "postoB":
+                                stock = stockB;
+                                break;
+                            case "cozinha1":
+                                stock = stockC1;
+                                break;
+                            case "cozinha2":
+                                stock = stockC2;
+                                break;
+                            case "cozinha3":
+                                stock = stockC3;
+                                break;
+                            default:
+                                break;
+                        }
+
+                        if (stock != null) {
+                            for (Object[] s : stock) {
+                                insStock.setString(1, postoId);
+                                insStock.setString(2, (String) s[0]);
+                                insStock.setInt(3, (Integer) s[1]);
+                                insStock.executeUpdate();
+                            }
+                        }
                     }
                 }
 

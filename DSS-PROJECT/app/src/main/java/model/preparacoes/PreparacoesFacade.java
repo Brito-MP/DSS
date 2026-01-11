@@ -281,4 +281,54 @@ public class PreparacoesFacade implements InterPreparacoesL {
         return posto != null ? posto.getTipo() : null;
     }
 
+    @Override
+    public String getPostoDeFuncionario(long funcionarioId) {
+        for (Posto posto : this.postos.values()) {
+            Long ocupadoPor = posto != null ? posto.getFuncionarioId() : null;
+            if (ocupadoPor != null && ocupadoPor == funcionarioId) {
+                return posto.getId();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public boolean ingredientesSuficientes(long idPedido, String postoId) {
+        Pedido pedido = this.pedidos.get(idPedido);
+        Posto posto = this.postos.get(postoId);
+
+        if (pedido == null || posto == null) {
+            return false;
+        }
+
+        Map<String, Integer> stock = posto.getQuantidadeAlimento();
+
+        for (Produto produto : pedido.getProdutos()) {
+            if (produto instanceof Item) {
+                if (!temStockParaItem((Item) produto, stock)) {
+                    return false;
+                }
+            } else if (produto instanceof Menu) {
+                for (Item item : ((Menu) produto).getItens()) {
+                    if (!temStockParaItem(item, stock)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean temStockParaItem(Item item, Map<String, Integer> stock) {
+        for (Alimento alimento : item.getAlimentos().values()) {
+            int requerido = alimento.getQuantidade();
+            int disponivel = stock.getOrDefault(alimento.getId(), 0);
+            if (disponivel < requerido) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
