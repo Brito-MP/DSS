@@ -649,27 +649,6 @@ public class PedidoDAO implements Map<Long, Pedido> {
         }
     }
 
-    public List<Pedido> getPedidosPorEstado(Estado estado) {
-        List<Pedido> pendentes = new ArrayList<>();
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); PreparedStatement pstm = conn
-                .prepareStatement("SELECT Id FROM pedidos WHERE Estado=? ORDER BY Id")) {
-            pstm.setString(1, estado.name());
-            try (ResultSet rs = pstm.executeQuery()) {
-                while (rs.next()) {
-                    long id = rs.getLong("Id");
-                    Pedido pedido = this.get(id);
-                    if (pedido != null) {
-                        pendentes.add(pedido);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new NullPointerException(e.getMessage());
-        }
-        return pendentes;
-    }
-
     @Override
     public void clear() {
         try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement()) {

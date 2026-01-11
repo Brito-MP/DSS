@@ -7,7 +7,6 @@ import java.util.Map;
 import data.PedidoDAO;
 import data.ProdutoDAO;
 import model.gestao.Alimento;
-import model.pedidos.Estado;
 
 public class PedidosFacade implements InterPedidoL {
 
@@ -75,30 +74,36 @@ public class PedidosFacade implements InterPedidoL {
 
     @Override
     public List<Pedido> getPedidosPorPagar() {
-        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.PorPagar);
-        List<Pedido> clones = new ArrayList<>();
-        for (Pedido p : pedidos) {
-            clones.add(p.clone());
-        }
-        return clones;
+        return this.getPedidosPorEstado(Estado.PorPagar);
     }
 
     @Override
     public List<Pedido> getPedidosEmPreparacao() {
-        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.EmPreparacao);
-        List<Pedido> clones = new ArrayList<>();
-        for (Pedido p : pedidos) {
-            clones.add(p.clone());
-        }
-        return clones;
+        return this.getPedidosPorEstado(Estado.EmPreparacao);
     }
 
     @Override
     public List<Pedido> getPedidosConcluidos() {
-        List<Pedido> pedidos = ((PedidoDAO) this.pedidos).getPedidosPorEstado(Estado.Concluido);
+        return this.getPedidosPorEstado(Estado.Concluido);
+    }
+
+    @Override
+    public List<Long> getPedidosConcluidosIds() {
+        List<Long> ids = new ArrayList<>();
+        for (Pedido p : this.pedidos.values()) {
+            if (p.getEstado() == Estado.Concluido) {
+                ids.add(p.getIdCounter());
+            }
+        }
+        return ids;
+    }
+
+    private List<Pedido> getPedidosPorEstado(Estado estado) {
         List<Pedido> clones = new ArrayList<>();
-        for (Pedido p : pedidos) {
-            clones.add(p.clone());
+        for (Pedido p : this.pedidos.values()) {
+            if (p.getEstado() == estado) {
+                clones.add(p.clone());
+            }
         }
         return clones;
     }

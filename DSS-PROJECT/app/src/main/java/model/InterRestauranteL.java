@@ -7,6 +7,7 @@ import model.gestao.Alimento;
 import model.pedidos.Pedido;
 import model.pedidos.PedidoException;
 import model.pedidos.Produto;
+import model.preparacoes.TipoPosto;
 
 public interface InterRestauranteL {
 
@@ -46,7 +47,9 @@ public interface InterRestauranteL {
 
         public List<Pedido> getPedidosEmPreparacao();
 
-        public List<Pedido> getPedidosConcluidos();
+    public List<Pedido> getPedidosConcluidos();
+
+    public List<Long> getPedidosConcluidosIds();
 
         public List<Long> getFilaPedidos();
 
@@ -56,5 +59,21 @@ public interface InterRestauranteL {
         public List<Produto> getProdutosPedido(long idPedido);
 
         public Map<String, Alimento> getAlimentosItem(long idPedido, String idProduto) throws PedidoException;
+
+    public boolean autenticaFuncionario(long id, String password);
+
+    public boolean funcionarioEAdmin(long id);
+
+    public boolean postoExiste(String postoId);
+
+    public List<String> getPostosLivres();
+
+    public boolean ocuparPosto(String postoId, long funcionarioId);
+
+    public void libertarPostoDeFuncionario(long funcionarioId);
+
+    public void registaFuncionario(long id, String nome, String password, boolean admin);
+
+    public TipoPosto getTipoPosto(String postoId);
 
 }

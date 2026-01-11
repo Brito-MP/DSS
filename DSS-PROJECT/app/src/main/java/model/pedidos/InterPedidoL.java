@@ -29,5 +29,7 @@ public interface InterPedidoL {
 
         List<Pedido> getPedidosEmPreparacao();
 
-        List<Pedido> getPedidosConcluidos();
+    List<Pedido> getPedidosConcluidos();
+
+    List<Long> getPedidosConcluidosIds();
 }
