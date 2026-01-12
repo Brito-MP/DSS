@@ -246,15 +246,16 @@ public class PostoDAO implements Map<String, Posto> {
     }
 
     @Override
-    public void clear() {
-        try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD); Statement stm = conn.createStatement()) {
-            stm.executeUpdate("TRUNCATE posto_alimentos");
-            stm.executeUpdate("TRUNCATE postos");
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new NullPointerException(e.getMessage());
-        }
+public void clear() {
+    try (Connection conn = DriverManager.getConnection(DAOconfig.URL, DAOconfig.USERNAME, DAOconfig.PASSWORD);
+         Statement stm = conn.createStatement()) {
+        stm.executeUpdate("DELETE FROM posto_alimentos");
+        stm.executeUpdate("DELETE FROM postos");
+    } catch (SQLException e) {
+        e.printStackTrace();
+        throw new NullPointerException(e.getMessage());
     }
+}
 
     @Override
     public Set<String> keySet() {

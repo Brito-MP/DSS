@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import data.FuncionarioDAO;
+import data.PedidoDAO;
+import data.PostoDAO;
 import model.InterRestauranteL;
 import model.RestauranteFacade;
 import model.gestao.Alimento;
@@ -22,7 +25,10 @@ public class App {
     private Scanner scanner;
     // ========== MAIN E CONSTRUTOR ==========
     public static void main(String[] args) {
-        //PedidoDAO.getInstance().clear(); // LIMPAR A BASE DE DADOS
+        
+        //PedidoDAO.getInstance().clear();
+        //PostoDAO.getInstance().clear();
+        //FuncionarioDAO.getInstance().clear();
 
         App app = new App();
         app.run();
@@ -38,17 +44,19 @@ public class App {
         NewMenu menu = new NewMenu(new String[] {
                 "TestaDAO",
                 "Funcionario",
-                "Cliente"//,
-                //"Sair"
+                "Cliente"// ,
+                // "Sair"
         });
 
         menu.setHandler(1, this::testaDAO);
         menu.setHandler(2, this::menuFuncionario);
         menu.setHandler(3, this::menuCliente);
-        /* menu.setHandler(4, () -> {
-            System.out.println("Até já!");
-            System.exit(0);
-        }); */
+        /*
+         * menu.setHandler(4, () -> {
+         * System.out.println("Até já!");
+         * System.exit(0);
+         * });
+         */
 
         menu.run();
         scanner.close();
@@ -210,7 +218,7 @@ public class App {
                 System.out.println("Alimento ID: " + entry.getKey() + " | Quantidade: " + entry.getValue());
             }
         });
-        
+
         menu.setHandler(3, () -> displayPostosLivres());
         menu.setHandler(4, () -> registarFuncionario());
         menu.setHandler(5, this::enviarMensagemGerente);
